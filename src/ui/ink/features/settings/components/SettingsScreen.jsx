@@ -25,7 +25,7 @@ import { useSettingsNavigation } from '../hooks/useSettingsNavigation.js';
  */
 export function SettingsScreen() {
   const { goBack } = useAppState();
-  const { settings, updateSettings, resetSettings } = useSettings();
+  const { state: settings, updateUserSettings, updateMachineSettings, resetToDefaults } = useSettings();
   const { showToast } = useToast();
   
   const {
@@ -42,7 +42,13 @@ export function SettingsScreen() {
    */
   const handleSettingsUpdate = (section, updates) => {
     try {
-      updateSettings(section, updates);
+      if (section === 'user') {
+        updateUserSettings(updates);
+      } else if (section === 'machine') {
+        updateMachineSettings(updates);
+      } else {
+        throw new Error(`Unknown settings section: ${section}`);
+      }
       showToast(`${section} settings updated`, 'success');
     } catch (error) {
       showToast(`Failed to update settings: ${error.message}`, 'error');
@@ -54,7 +60,7 @@ export function SettingsScreen() {
    */
   const handleReset = () => {
     try {
-      resetSettings();
+      resetToDefaults();
       showToast('Settings reset to defaults', 'success');
     } catch (error) {
       showToast(`Failed to reset settings: ${error.message}`, 'error');
@@ -65,6 +71,15 @@ export function SettingsScreen() {
    * Render current settings section
    */
   const renderCurrentSection = () => {
+    // Ensure settings object exists and has proper structure
+    if (!settings) {
+      return (
+        <Box>
+          <Text color="red">Settings not loaded. Please try again.</Text>
+        </Box>
+      );
+    }
+
     switch (currentSection) {
       case 'machine':
         return (
@@ -116,7 +131,7 @@ export function SettingsScreen() {
       {/* Main Content */}
       <Box flex={1} flexDirection="row">
         {/* Sidebar - Navigation */}
-        <Box width="33%" marginRight={1}>
+        <Box width="50%" marginRight={1}>
           <SettingsNavigation
             sections={sections}
             currentSection={currentSection}

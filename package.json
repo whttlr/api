@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node main.js",
-    "api": "node src/ui/api/server.js",
+    "api": "npm run docs:mcp-generate && node src/ui/api/server.js",
+    "api:dev": "npm run docs:mcp-generate && nodemon src/ui/api/server.js",
     "interactive": "node main.js --interactive",
     "list-ports": "node main.js --list-ports",
     "diagnose": "node main.js --diagnose",
@@ -27,7 +28,9 @@
     "test:unit": "node --experimental-vm-modules node_modules/.bin/jest --testPathPattern='src.*__tests__'",
     "test:integration": "node --experimental-vm-modules node_modules/.bin/jest --testPathPattern='integration'",
     "cnc-interface": "esbuild .ideas/cnc_interface.jsx --bundle --platform=node --format=esm --outfile=.ideas/cnc_interface.bundle.js --external:react-devtools-core --define:process.env.NODE_ENV='\"production\"' && node .ideas/cnc_interface.bundle.js",
-    "preink": "esbuild src/ui/ink/App.jsx --bundle --platform=node --format=esm --outfile=dist/ink-app.js --external:react-devtools-core --define:process.env.NODE_ENV='\"production\"'"
+    "preink": "esbuild src/ui/ink/App.jsx --bundle --platform=node --format=esm --outfile=dist/ink-app.js --external:react-devtools-core --define:process.env.NODE_ENV='\"production\"'",
+    "docs:mcp-generate": "node scripts/mcp/generate-docs.js",
+    "docs:mcp-watch": "nodemon --watch src/ui/api --exec 'npm run docs:mcp-generate'"
   },
   "dependencies": {
     "@serialport/parser-readline": "^12.0.0",

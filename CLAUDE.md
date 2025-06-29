@@ -29,6 +29,12 @@
 - Use clear, descriptive file names that indicate purpose
 - Keep functions focused and atomic
 
+**Exceptions** (Files that may exceed 300 lines):
+- **Documentation/Configuration files**: `docs/swagger.js`, API schema definitions
+- **Test files**: Comprehensive test suites with extensive mock data
+- **Generated files**: Auto-generated code (mark clearly as generated)
+- Must be justified and documented when exceeding limit
+
 ### 🏗️ Strictly Enforced Architecture
 - **Follow the self-contained module structure** exactly
 - Each module contains: `__tests__/`, `__mocks__/`, `README.md`, `config.js`, `index.js`

@@ -130,7 +130,7 @@ export function SelectableList({
   // Handle empty state
   if (items.length === 0) {
     return (
-      <Box {...styles}>
+      <Box width="100%" {...styles}>
         <Text dimColor>{emptyMessage}</Text>
       </Box>
     );
@@ -140,18 +140,18 @@ export function SelectableList({
   const itemsToRender = maxHeight ? items.slice(0, maxHeight) : items;
   
   return (
-    <Box flexDirection="column" {...styles}>
+    <Box flexDirection="column" width="100%" {...styles}>
       {itemsToRender.map((item, index) => {
         const isSelected = index === selectedIndex;
         return (
-          <Box key={item.id || index}>
+          <Box key={item.id || index} width="100%">
             {itemRenderer(item, isSelected, index)}
           </Box>
         );
       })}
       
       {maxHeight && items.length > maxHeight && (
-        <Box marginTop={1}>
+        <Box marginTop={1} width="100%">
           <Text dimColor>... and {items.length - maxHeight} more items</Text>
         </Box>
       )}

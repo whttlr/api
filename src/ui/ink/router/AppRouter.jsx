@@ -23,6 +23,7 @@ import { SettingsScreen } from '../features/settings/index.js';
 // Shared components
 import { StatusBar } from '../shared/components/layout/StatusBar.jsx';
 import { EmergencyStopModal } from '../shared/components/modals/EmergencyStopModal.jsx';
+import HelpSidebar from '../shared/components/layout/HelpSidebar.jsx';
 
 /**
  * App Router Component
@@ -30,7 +31,7 @@ import { EmergencyStopModal } from '../shared/components/modals/EmergencyStopMod
  */
 export function AppRouter() {
   const { state } = useAppState();
-  const { currentScreen } = state;
+  const { currentScreen, sidebar } = state;
   
   /**
    * Render the current screen component
@@ -64,13 +65,19 @@ export function AppRouter() {
   };
   
   return (
-    <Box flexDirection="column" height="100%">
-      {/* Main content area */}
-      <Box flex={1}>
-        {renderCurrentScreen()}
+    <Box flexDirection="column" height="100%" width="100%">
+      {/* Main layout container with sidebar */}
+      <Box flexDirection="row" flex={1} width="100%">
+        {/* Main content area - takes remaining space */}
+        <Box flex={1} flexDirection="column">
+          {renderCurrentScreen()}
+        </Box>
+        
+        {/* Help sidebar - fixed width when open */}
+        <HelpSidebar isOpen={sidebar.isOpen} />
       </Box>
       
-      {/* Status bar */}
+      {/* Status bar - full width at bottom */}
       <StatusBar />
       
       {/* Emergency stop modal (overlay) */}

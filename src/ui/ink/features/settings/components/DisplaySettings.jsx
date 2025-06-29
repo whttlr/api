@@ -23,7 +23,6 @@ export function DisplaySettings({
     showTooltips = true,
     showGrid = true,
     showAxes = true,
-    refreshRate = 100,
     logLevel = 'info',
     autoScroll = true
   } = settings;
@@ -93,17 +92,6 @@ export function DisplaySettings({
         </Box>
       </Box>
       
-      {/* Performance Settings */}
-      <Box marginBottom={2}>
-        <Box flexDirection="column" borderStyle="single" borderColor="green" paddingX={1} paddingY={1}>
-          <Text bold color="green" marginBottom={1}>Performance</Text>
-          
-          <Box flexDirection="column" gap={1}>
-            <Text>Refresh Rate: {refreshRate}ms</Text>
-            <Text dimColor>[R] Adjust refresh rate</Text>
-          </Box>
-        </Box>
-      </Box>
       
       {/* Logging Settings */}
       <Box marginBottom={2}>
@@ -128,7 +116,6 @@ export function DisplaySettings({
         <Box flexDirection="column" borderStyle="single" borderColor="gray" paddingX={1} paddingY={1}>
           <Text bold color="white" marginBottom={1}>Current Display Settings</Text>
           <Text>Theme: {theme}</Text>
-          <Text>Refresh: {refreshRate}ms</Text>
           <Text>Log Level: {logLevel}</Text>
           <Text>UI Elements: {[showTooltips && "Tooltips", showGrid && "Grid", showAxes && "Axes"].filter(Boolean).join(", ") || "None"}</Text>
         </Box>

@@ -42,7 +42,7 @@ function MainScreen({ onNavigate }) {
     React.createElement(
       Text,
       { dimColor: true, marginBottom: 1 },
-      'Select an option to continue'
+      'Se11lect an option to continue'
     ),
     ...menuItems.map((item, index) => 
       React.createElement(

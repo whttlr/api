@@ -17,7 +17,7 @@ import { validateGcodeCommand } from '../services/GcodeValidator.js';
  */
 export function useCommandExecution() {
   const { state, sendCommand, gcodeSender, addToHistory } = useCNC();
-  const { setError } = useAppState();
+  const { setError, showSidebar, hideSidebar } = useAppState();
   
   // Command input state
   const [commandInput, setCommandInput] = useState('');
@@ -50,22 +50,10 @@ export function useCommandExecution() {
    * @returns {boolean} Whether confirmation is needed
    */
   const shouldConfirmCommand = useCallback((command) => {
+    // For validation feedback, confirm almost all commands
+    // Only skip the most basic status queries
     const cmd = command.trim().toUpperCase();
-    
-    // Always confirm movement commands
-    if (cmd.match(/^G[01]/)) return true;
-    
-    // Always confirm spindle commands
-    if (cmd.match(/^M[345]/)) return true;
-    
-    // Always confirm homing and system commands
-    if (cmd.match(/^\$H|\$RST|!|~|%/)) return true;
-    
-    // Don't confirm simple status queries
-    if (cmd.match(/^\?|\$\$|\$#|\$G/)) return false;
-    
-    // Confirm everything else by default for safety
-    return true;
+    return !cmd.match(/^\?$|\$\$$|\$#$|\$G$/);
   }, []);
 
   /**
@@ -98,47 +86,84 @@ export function useCommandExecution() {
   const executeCommand = useCallback(async () => {
     if (!commandInput.trim() || isExecuting) return;
     
-    // Validate the command before execution
+    // Validate the command
     const validation = validateGcodeCommand(commandInput);
-    
-    // Block execution if there are errors
+
+    // Show confirmation/validation if not skipped and command needs confirmation
+    // Always show for validation feedback, even for invalid commands
+    if (!skipConfirmation && shouldConfirmCommand(commandInput.trim())) {
+      setConfirmationCommand(commandInput.trim());
+      setShowConfirmation(true);
+      
+      // Show confirmation in sidebar with validation details
+      showSidebar({
+        type: 'command-confirmation',
+        title: validation.isValid ? 'Confirm Command' : 'Command Validation',
+        data: {
+          command: commandInput.trim(),
+          isConnected: state.connection.isConnected,
+          validation: validation,
+          onConfirm: () => {
+            setShowConfirmation(false);
+            hideSidebar();
+            // Only execute if valid
+            if (validation.isValid) {
+              executeCommandDirectly(commandInput.trim());
+            } else {
+              setError(`Cannot execute invalid command: ${validation.errors.join(', ')}`);
+            }
+          },
+          onCancel: () => {
+            setShowConfirmation(false);
+            hideSidebar();
+            setConfirmationCommand('');
+          }
+        }
+      });
+      return;
+    }
+
+    // For commands that don't need confirmation, still check validity before execution
     if (!validation.isValid) {
       setError(`Invalid command: ${validation.errors.join(', ')}`);
       return;
     }
 
-    // Show confirmation if not skipped and command is potentially dangerous
-    if (!skipConfirmation && shouldConfirmCommand(commandInput.trim())) {
-      setConfirmationCommand(commandInput.trim());
-      setShowConfirmation(true);
-      return;
-    }
-
     // Execute the command directly
     await executeCommandDirectly(commandInput.trim());
-  }, [commandInput, isExecuting, skipConfirmation, shouldConfirmCommand, executeCommandDirectly, setError]);
+  }, [commandInput, isExecuting, skipConfirmation, shouldConfirmCommand, executeCommandDirectly, setError, showSidebar, hideSidebar, state.connection.isConnected]);
 
   /**
-   * Handle confirmation dialog input
+   * Handle confirmation dialog input from global keyboard handler
    * @param {string} input - User input
    * @param {Object} key - Key event object
    */
   const handleConfirmationInput = useCallback((input, key) => {
+    if (!showConfirmation) return false; // Not handling confirmation
+    
     if (input === 'y' || key.return) {
       // Yes - execute the command
       setShowConfirmation(false);
+      hideSidebar();
       executeCommandDirectly(confirmationCommand);
+      return true;
     } else if (input === 'n' || key.escape) {
       // No - cancel
       setShowConfirmation(false);
+      hideSidebar();
       setConfirmationCommand('');
+      return true;
     } else if (input === 'd') {
       // Don't ask again - set preference and execute
       setSkipConfirmation(true);
       setShowConfirmation(false);
+      hideSidebar();
       executeCommandDirectly(confirmationCommand);
+      return true;
     }
-  }, [confirmationCommand, executeCommandDirectly]);
+    
+    return false; // Didn't handle the input
+  }, [confirmationCommand, executeCommandDirectly, showConfirmation, hideSidebar]);
 
   /**
    * Execute emergency stop

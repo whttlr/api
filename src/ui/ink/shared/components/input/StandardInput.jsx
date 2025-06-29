@@ -243,21 +243,23 @@ export function StandardInput({
         {renderInput()}
       </Box>
       
-      {/* Validation feedback */}
-      {showValidation && validationResult && (
-        <ValidationDisplay 
-          validation={validationResult}
-          variant="compact"
-          maxItems={3}
-        />
-      )}
+      {/* Validation feedback - always present fixed height container */}
+      <Box height={2} flexDirection="column">
+        {showValidation && validationResult && validationResult.errors.length > 0 && (
+          <ValidationDisplay 
+            validation={validationResult}
+            compact={true}
+            variant="compact"
+            maxItems={1}
+          />
+        )}
+      </Box>
       
-      {/* Help text */}
-      {isEditMode && (
+      {/* Help text - only show for non-gcode inputs to avoid cursor jumping */}
+      {isEditMode && type !== 'gcode' && (
         <Box marginTop={1}>
           <Text dimColor>
             [Enter] Save • [Esc] Cancel
-            {type === 'gcode' && ' • G-code commands only'}
             {maxLength && ` • Max ${maxLength} chars`}
           </Text>
         </Box>

@@ -21,42 +21,42 @@ const MENU_ITEMS = [
     title: 'Execute G-Code', 
     key: '1', 
     description: 'Enter or select G-code to execute',
-    icon: '⚙️'
+    // icon: '⚙️'
   },
   { 
     id: 'file-browser', 
     title: 'File Browser', 
     key: '2', 
     description: 'Browse and manage G-code files',
-    icon: '📁'
+    // icon: '📁'
   },
   { 
     id: 'manual-control', 
     title: 'Manual Control', 
     key: '3', 
     description: 'Manually control machine position and spindle',
-    icon: '🎮'
+    // icon: '🎮'
   },
   { 
     id: 'connection', 
     title: 'Connection', 
     key: 'c', 
     description: 'Manage machine connection',
-    icon: '🔌'
+    // icon: '🔌'
   },
   { 
     id: 'settings', 
     title: 'Settings', 
     key: '4', 
     description: 'Configure machine and user preferences',
-    icon: '⚙️'
+    // icon: '⚙️'
   },
   { 
     id: 'quit', 
     title: 'Quit', 
     key: 'q', 
     description: 'Exit the application',
-    icon: '🚪'
+    // icon: '🚪'
   }
 ];
 
@@ -90,8 +90,8 @@ function customMenuItemRenderer(item, isSelected, index) {
  */
 function MenuDescription({ selectedItem }) {
   return (
-    <Box marginTop={2} marginBottom={2} height={3} flexDirection="column" justifyContent="center">
-      <Box borderStyle="single" borderColor="gray" paddingX={2} paddingY={1}>
+    <Box marginTop={2} marginBottom={2} height={3} flexDirection="column" justifyContent="center" width="100%">
+      <Box borderStyle="single" borderColor="gray" paddingX={2} paddingY={1} width="100%">
         <Text dimColor>
           {selectedItem?.description || 'Select an option to see description'}
         </Text>
@@ -121,23 +121,23 @@ export function MainMenu() {
   };
 
   return (
-    <Box flexDirection="column" alignItems="center" paddingY={2}>
+    <Box flexDirection="column" width="100%" paddingY={2} paddingX={4}>
       {/* Application Title */}
-      <Box marginBottom={2}>
+      <Box marginBottom={2} justifyContent="center">
         <Text bold color="green">
           CNC G-Code Control System
         </Text>
       </Box>
       
       {/* Subtitle */}
-      <Box marginBottom={3}>
+      <Box marginBottom={3} justifyContent="center">
         <Text dimColor>
           Select an option to continue
         </Text>
       </Box>
 
       {/* Menu Items using SelectableList */}
-      <Box flexDirection="column">
+      <Box flexDirection="column" width="100%">
         <SelectableList
           items={MENU_ITEMS}
           onSelect={handleSelect}
@@ -154,7 +154,7 @@ export function MainMenu() {
       <MenuDescription selectedItem={selectedItem} />
 
       {/* Instructions */}
-      <Box>
+      <Box justifyContent="center" width="100%">
         <Text dimColor>
           Use ↑↓ keys or shortcuts, Enter to select
         </Text>

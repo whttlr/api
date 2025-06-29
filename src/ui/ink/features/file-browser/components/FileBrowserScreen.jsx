@@ -144,7 +144,7 @@ export function FileBrowserScreen() {
         {/* Header */}
         <Box marginBottom={2} paddingX={1}>
           <Text bold color="green">
-            📁 G-Code File Browser
+            G-Code File Browser
           </Text>
         </Box>
 

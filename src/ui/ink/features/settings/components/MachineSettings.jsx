@@ -21,21 +21,48 @@ export function MachineSettings({
 }) {
   
   const {
-    limits = { x: 200, y: 200, z: 100 },
-    speeds = { rapid: 3000, work: 1000, plunge: 300 },
-    acceleration = { x: 500, y: 500, z: 100 },
-    maxSpindle = 24000,
+    limits = { 
+      x: { min: -100, max: 100 }, 
+      y: { min: -100, max: 100 }, 
+      z: { min: -50, max: 50 }
+    },
+    speeds = { 
+      travel: 3000, 
+      feed: 1000 
+    },
+    spindle = {
+      minSpeed: 0,
+      maxSpeed: 24000,
+      defaultSpeed: 12000,
+      defaultDirection: 'clockwise'
+    },
     units = 'metric'
   } = settings;
   
   /**
-   * Handle limit changes
+   * Handle limit changes for min/max ranges
    */
-  const handleLimitChange = (axis, value) => {
-    if (value > 0 && value <= 1000) {
+  const handleLimitChange = (axis, type, value) => {
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue) && numValue >= -1000 && numValue <= 1000) {
+      const newLimits = {
+        ...limits,
+        [axis]: {
+          ...limits[axis],
+          [type]: numValue
+        }
+      };
+      
+      // Ensure min <= max
+      if (type === 'min' && numValue > limits[axis].max) {
+        newLimits[axis].max = numValue;
+      } else if (type === 'max' && numValue < limits[axis].min) {
+        newLimits[axis].min = numValue;
+      }
+      
       onUpdate({
         ...settings,
-        limits: { ...limits, [axis]: value }
+        limits: newLimits
       });
     }
   };
@@ -44,11 +71,32 @@ export function MachineSettings({
    * Handle speed changes
    */
   const handleSpeedChange = (type, value) => {
-    if (value > 0 && value <= 10000) {
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue) && numValue > 0 && numValue <= 10000) {
       onUpdate({
         ...settings,
-        speeds: { ...speeds, [type]: value }
+        speeds: { ...speeds, [type]: numValue }
       });
+    }
+  };
+  
+  /**
+   * Handle spindle changes
+   */
+  const handleSpindleChange = (property, value) => {
+    if (property === 'defaultDirection') {
+      onUpdate({
+        ...settings,
+        spindle: { ...spindle, [property]: value }
+      });
+    } else {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue) && numValue >= 0 && numValue <= 50000) {
+        onUpdate({
+          ...settings,
+          spindle: { ...spindle, [property]: numValue }
+        });
+      }
     }
   };
   
@@ -63,18 +111,21 @@ export function MachineSettings({
         <Box flexDirection="column" borderStyle="single" borderColor="blue" paddingX={1} paddingY={1}>
           <Text bold color="blue" marginBottom={1}>Travel Limits ({displayUnit})</Text>
           
-          <Box gap={3}>
+          <Box flexDirection="column" gap={1}>
             <Box flexDirection="column">
-              <Text>X-Axis: {limits.x} {displayUnit}</Text>
-              <Text dimColor>[X] Adjust X limit</Text>
+              <Text bold>X-Axis:</Text>
+              <Text>  Min: {limits.x.min} {displayUnit}  Max: {limits.x.max} {displayUnit}</Text>
+              <Text dimColor>  [X] Adjust X limits</Text>
             </Box>
             <Box flexDirection="column">
-              <Text>Y-Axis: {limits.y} {displayUnit}</Text>
-              <Text dimColor>[Y] Adjust Y limit</Text>
+              <Text bold>Y-Axis:</Text>
+              <Text>  Min: {limits.y.min} {displayUnit}  Max: {limits.y.max} {displayUnit}</Text>
+              <Text dimColor>  [Y] Adjust Y limits</Text>
             </Box>
             <Box flexDirection="column">
-              <Text>Z-Axis: {limits.z} {displayUnit}</Text>
-              <Text dimColor>[Z] Adjust Z limit</Text>
+              <Text bold>Z-Axis:</Text>
+              <Text>  Min: {limits.z.min} {displayUnit}  Max: {limits.z.max} {displayUnit}</Text>
+              <Text dimColor>  [Z] Adjust Z limits</Text>
             </Box>
           </Box>
         </Box>
@@ -83,42 +134,20 @@ export function MachineSettings({
       {/* Speed Settings */}
       <Box marginBottom={2}>
         <Box flexDirection="column" borderStyle="single" borderColor="green" paddingX={1} paddingY={1}>
-          <Text bold color="green" marginBottom={1}>Speed Settings ({displayUnit}/min)</Text>
+          <Text bold color="green" marginBottom={1}>Travel and Feed Limits ({displayUnit}/min)</Text>
           
-          <Box gap={3}>
+          <Box flexDirection="column" gap={1}>
             <Box flexDirection="column">
-              <Text>Rapid: {speeds.rapid} {displayUnit}/min</Text>
-              <Text dimColor>[R] Adjust rapid speed</Text>
+              <Text bold>Travel Speed:</Text>
+              <Text>  {speeds.travel} {displayUnit}/min</Text>
+              <Text dimColor>  [T] Adjust travel speed</Text>
             </Box>
             <Box flexDirection="column">
-              <Text>Work: {speeds.work} {displayUnit}/min</Text>
-              <Text dimColor>[W] Adjust work speed</Text>
-            </Box>
-            <Box flexDirection="column">
-              <Text>Plunge: {speeds.plunge} {displayUnit}/min</Text>
-              <Text dimColor>[P] Adjust plunge speed</Text>
+              <Text bold>Feed Speed:</Text>
+              <Text>  {speeds.feed} {displayUnit}/min</Text>
+              <Text dimColor>  [F] Adjust feed speed</Text>
             </Box>
           </Box>
-        </Box>
-      </Box>
-      
-      {/* Acceleration Settings */}
-      <Box marginBottom={2}>
-        <Box flexDirection="column" borderStyle="single" borderColor="yellow" paddingX={1} paddingY={1}>
-          <Text bold color="yellow" marginBottom={1}>Acceleration ({displayUnit}/s²)</Text>
-          
-          <Box gap={3}>
-            <Box flexDirection="column">
-              <Text>X: {acceleration.x} {displayUnit}/s²</Text>
-            </Box>
-            <Box flexDirection="column">
-              <Text>Y: {acceleration.y} {displayUnit}/s²</Text>
-            </Box>
-            <Box flexDirection="column">
-              <Text>Z: {acceleration.z} {displayUnit}/s²</Text>
-            </Box>
-          </Box>
-          <Text dimColor marginTop={1}>[A] Adjust acceleration settings</Text>
         </Box>
       </Box>
       
@@ -127,8 +156,23 @@ export function MachineSettings({
         <Box flexDirection="column" borderStyle="single" borderColor="magenta" paddingX={1} paddingY={1}>
           <Text bold color="magenta" marginBottom={1}>Spindle Configuration</Text>
           
-          <Text>Max Speed: {maxSpindle} RPM</Text>
-          <Text dimColor>[S] Adjust spindle settings</Text>
+          <Box flexDirection="column" gap={1}>
+            <Box flexDirection="column">
+              <Text bold>Speed Range:</Text>
+              <Text>  Min: {spindle.minSpeed} RPM  Max: {spindle.maxSpeed} RPM</Text>
+              <Text dimColor>  [S] Adjust speed range</Text>
+            </Box>
+            <Box flexDirection="column">
+              <Text bold>Default Speed:</Text>
+              <Text>  {spindle.defaultSpeed} RPM</Text>
+              <Text dimColor>  [D] Adjust default speed</Text>
+            </Box>
+            <Box flexDirection="column">
+              <Text bold>Default Direction:</Text>
+              <Text>  {spindle.defaultDirection === 'clockwise' ? 'Clockwise (M3)' : 'Counter-clockwise (M4)'}</Text>
+              <Text dimColor>  [R] Toggle direction</Text>
+            </Box>
+          </Box>
         </Box>
       </Box>
       

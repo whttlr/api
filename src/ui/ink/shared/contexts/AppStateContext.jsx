@@ -24,8 +24,9 @@ export const initialAppState = {
   modal: null, // Keep for backward compatibility
   sidebar: {
     isOpen: false,
-    type: null, // 'help', 'gcode-reference', 'context-help'
-    title: ''
+    type: null, // 'help', 'gcode-reference', 'context-help', 'command-confirmation'
+    title: '',
+    data: null
   }
 };
 
@@ -74,7 +75,8 @@ export function appStateReducer(state, action) {
         sidebar: { 
           isOpen: true, 
           type: action.payload.type, 
-          title: action.payload.title 
+          title: action.payload.title,
+          data: action.payload.data
         },
         modal: null // Close any existing modal when opening sidebar
       };
@@ -84,7 +86,8 @@ export function appStateReducer(state, action) {
         sidebar: { 
           isOpen: false, 
           type: null, 
-          title: '' 
+          title: '',
+          data: null
         } 
       };
     default:

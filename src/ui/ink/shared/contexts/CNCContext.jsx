@@ -8,6 +8,22 @@
  */
 
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import path from 'path';
+
+// Load configuration for file browser defaults
+let config = {};
+try {
+  // Try to load config from the main config file
+  const configPath = path.resolve(process.cwd(), 'config.json');
+  config = require(configPath);
+} catch (error) {
+  // Fallback to defaults if config can't be loaded
+  config = {
+    fileBrowser: {
+      defaultDirectory: './gcode-files'
+    }
+  };
+}
 
 const CNCContext = createContext();
 
@@ -43,7 +59,7 @@ export const initialCNCState = {
   
   // File management state
   files: {
-    currentDirectory: process.cwd(),
+    currentDirectory: path.resolve(process.cwd(), config.fileBrowser?.defaultDirectory || './gcode-files'),
     availableFiles: [],
     recentFiles: [],
     currentFile: null,

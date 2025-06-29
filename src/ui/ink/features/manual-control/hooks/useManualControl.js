@@ -28,7 +28,7 @@ import {
 export function useManualControl() {
   const { state, sendCommand } = useCNC();
   const { showToast } = useToast();
-  const { settings } = useSettings();
+  const { state: settings } = useSettings();
   
   // Jog state
   const [jogSpeed, setJogSpeed] = useState('medium');

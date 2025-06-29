@@ -12,61 +12,7 @@ import { Box, Text, useInput } from 'ink';
 import { debug } from '../../../../../lib/logger/LoggerService.js';
 import { ValidationDisplay } from '../../../shared/components/feedback/ValidationDisplay.jsx';
 import { StandardInput, InputValidators } from '../../../shared/components/input/StandardInput.jsx';
-
-/**
- * G-code Command Validation Function
- * @param {string} value - Command input value
- * @returns {Object} Validation result
- */
-function validateGcodeCommand(value) {
-  if (!value || !value.trim()) {
-    return {
-      isValid: true,
-      errors: [],
-      warnings: [],
-      suggestions: ['Enter a G-code command (e.g., G0 X10 Y20)']
-    };
-  }
-
-  const errors = [];
-  const warnings = [];
-  const suggestions = [];
-
-  const trimmedValue = value.trim().toUpperCase();
-
-  // Basic G-code validation
-  if (!/^[GM$]\w*/.test(trimmedValue)) {
-    if (!/^[A-Z0-9\s\.\-]+$/.test(trimmedValue)) {
-      errors.push('Invalid characters - use only letters, numbers, spaces, dots, and dashes');
-    } else {
-      warnings.push('Command should start with G, M, or $ (e.g., G0, M3, $$)');
-    }
-  }
-
-  // Check for dangerous commands
-  const dangerousCommands = ['M112', 'M999', '$RST'];
-  if (dangerousCommands.some(cmd => trimmedValue.includes(cmd))) {
-    warnings.push('⚠️ DANGEROUS COMMAND - This will reset or emergency stop the machine');
-  }
-
-  // Provide suggestions for common commands
-  if (trimmedValue.startsWith('G0') || trimmedValue.startsWith('G1')) {
-    if (!/[XYZ]/.test(trimmedValue)) {
-      suggestions.push('Add coordinates: G0 X10 Y20 Z5');
-    }
-  }
-
-  if (trimmedValue === '$$') {
-    suggestions.push('This will show all GRBL settings');
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-    warnings,
-    suggestions
-  };
-}
+import { validateGcodeCommand } from '../services/GcodeValidator.js';
 
 /**
  * Execution Status Component
@@ -83,43 +29,7 @@ function ExecutionStatus({ isExecuting }) {
   );
 }
 
-/**
- * Command Help Component
- */
-function CommandHelp() {
-  return (
-    <Box marginBottom={2}>
-      <Text dimColor>Common commands: G0/G1 (move), G28 (home), M3/M5 (spindle), $$ (settings)</Text>
-    </Box>
-  );
-}
 
-/**
- * Instructions Component
- * @param {Object} props - Component props
- * @param {boolean} props.isEditMode - Edit mode status
- * @param {boolean} props.skipConfirmation - Skip confirmation preference
- */
-function Instructions({ isEditMode, skipConfirmation }) {
-  return (
-    <Box flexDirection="column">
-      <Box>
-        <Text dimColor>
-          {isEditMode 
-            ? "Type G-code command, Enter to execute (with confirmation), Esc to cancel"
-            : "Press Enter or 'E' to start typing a command"
-          }
-        </Text>
-      </Box>
-      
-      {skipConfirmation && (
-        <Box marginTop={1}>
-          <Text color="yellow" dimColor>ℹ️ Safety confirmations disabled - commands execute immediately</Text>
-        </Box>
-      )}
-    </Box>
-  );
-}
 
 /**
  * Command Input Component
@@ -187,9 +97,11 @@ export function CommandInput({
       
       <ExecutionStatus isExecuting={isExecuting} />
       
-      <CommandHelp />
-      
-      <Instructions isEditMode={isEditMode} skipConfirmation={skipConfirmation} />
+      {skipConfirmation && (
+        <Box marginBottom={1}>
+          <Text color="yellow" dimColor>ℹ️ Safety confirmations disabled - commands execute immediately</Text>
+        </Box>
+      )}
     </Box>
   );
 }

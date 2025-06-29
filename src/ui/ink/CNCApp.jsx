@@ -10,6 +10,7 @@
 
 import React from 'react';
 import { Box } from 'ink';
+import { useInput } from 'ink';
 
 // Context providers
 import { AppStateProvider } from './shared/contexts/AppStateContext.jsx';
@@ -22,6 +23,41 @@ import { AppRouter } from './router/AppRouter.jsx';
 
 // Shared components  
 import { LoadingSpinner } from './shared/components/feedback/LoadingSpinner.jsx';
+import { useAppState } from './shared/contexts/AppStateContext.jsx';
+import { useSettings } from './shared/contexts/SettingsContext.jsx';
+
+/**
+ * App Content Component
+ * Handles global keyboard shortcuts and renders the router
+ */
+function AppContent() {
+  const { state, showSidebar, hideSidebar } = useAppState();
+  const { toggleUnits } = useSettings();
+  
+  // Global keyboard shortcuts
+  useInput((input, key) => {
+    // Toggle help sidebar with '?'
+    if (input === '?') {
+      if (state.sidebar.isOpen) {
+        hideSidebar();
+      } else {
+        showSidebar({ type: 'help', title: 'Help' });
+      }
+    }
+    
+    // Toggle units with 'u'
+    if (input === 'u') {
+      toggleUnits();
+    }
+  });
+  
+  return (
+    <Box flexDirection="column" height="100%">
+      {/* Application router */}
+      <AppRouter />
+    </Box>
+  );
+}
 
 /**
  * CNC Application Root Component
@@ -33,10 +69,7 @@ export function CNCApp() {
       <SettingsProvider>
         <CNCProvider>
           <ToastProvider>
-            <Box flexDirection="column" height="100%">
-              {/* Application router */}
-              <AppRouter />
-            </Box>
+            <AppContent />
           </ToastProvider>
         </CNCProvider>
       </SettingsProvider>

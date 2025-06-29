@@ -102,6 +102,12 @@
     "gcodeCommandRegex": "^[GMT]\\d+",
     "maxCommandLength": 256
   },
+  "fileBrowser": {
+    "defaultDirectory": "./gcode-files",
+    "allowedExtensions": [".gcode", ".nc", ".txt", ".cnc"],
+    "showHiddenFiles": false,
+    "maxPreviewLines": 50
+  },
   "safety": {
     "dangerousCommands": ["M30", "M02"]
   },

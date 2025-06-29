@@ -37,7 +37,21 @@ const loadSettingsFromStorage = () => {
             ...parsed.user
           },
           machine: {
-            limits: { x: 300, y: 300, z: 100 },
+            limits: {
+              x: { min: -150, max: 150 },
+              y: { min: -150, max: 150 },
+              z: { min: -50, max: 50 }
+            },
+            speeds: {
+              travel: 3000,
+              feed: 1000
+            },
+            spindle: {
+              minSpeed: 0,
+              maxSpeed: 24000,
+              defaultSpeed: 12000,
+              defaultDirection: 'clockwise'
+            },
             safeHeight: 5,
             jogSpeeds: {
               slow: 100,
@@ -62,7 +76,21 @@ const loadSettingsFromStorage = () => {
       commandTimeout: 5000
     },
     machine: {
-      limits: { x: 300, y: 300, z: 100 },
+      limits: {
+        x: { min: -150, max: 150 },
+        y: { min: -150, max: 150 },
+        z: { min: -50, max: 50 }
+      },
+      speeds: {
+        travel: 3000,
+        feed: 1000
+      },
+      spindle: {
+        minSpeed: 0,
+        maxSpeed: 24000,
+        defaultSpeed: 12000,
+        defaultDirection: 'clockwise'
+      },
       safeHeight: 5,
       jogSpeeds: {
         slow: 100,
