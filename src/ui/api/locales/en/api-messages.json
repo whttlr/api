@@ -1,0 +1,124 @@
+{
+  "connection": {
+    "success": {
+      "connected": "Successfully connected to {port}",
+      "disconnected": "Successfully disconnected from {port}",
+      "already_connected": "Already connected to {port}",
+      "already_disconnected": "Already disconnected",
+      "ports_listed": "Available ports retrieved successfully",
+      "status_retrieved": "Connection status retrieved successfully",
+      "health_check": "Connection system health check completed",
+      "reset_complete": "Connection reset completed"
+    },
+    "errors": {
+      "port_required": "Port path is required",
+      "port_invalid_type": "Port must be a string",
+      "port_invalid_format": "Invalid port format. Expected format: /dev/ttyUSB0 or COM1",
+      "already_connected": "Already connected to {port}. Disconnect first.",
+      "connection_failed": "Failed to connect to {port}",
+      "disconnect_failed": "Failed to disconnect from current port",
+      "port_not_available": "Port {port} is not available",
+      "port_in_use": "Port {port} is in use by another process"
+    }
+  },
+  "machine": {
+    "success": {
+      "status_retrieved": "Machine status retrieved successfully",
+      "limits_retrieved": "Machine limits retrieved successfully",
+      "diagnostics_completed": "Machine diagnostics completed successfully",
+      "unlock_sent": "Unlock command sent successfully",
+      "homing_sent": "Homing command sent successfully",
+      "reset_sent": "Soft reset command sent successfully",
+      "emergency_stop_sent": "Emergency stop command sent successfully",
+      "health_retrieved": "Machine health status retrieved successfully",
+      "command_sent": "Command sent successfully",
+      "settings_retrieved": "Machine settings retrieved successfully"
+    },
+    "error": {
+      "not_connected": "Machine must be connected before performing operations",
+      "status_failed": "Failed to retrieve machine status",
+      "limits_failed": "Failed to retrieve machine limits",
+      "diagnostics_failed": "Failed to run machine diagnostics",
+      "unlock_failed": "Failed to send unlock command",
+      "homing_failed": "Failed to send homing command",
+      "reset_failed": "Failed to send soft reset",
+      "emergency_stop_failed": "Failed to send emergency stop",
+      "invalid_command": "Invalid G-code command",
+      "command_timeout": "Command execution timed out",
+      "machine_alarm": "Machine is in alarm state"
+    },
+    "info": {
+      "not_connected": "Not connected",
+      "reset_sent": "Soft reset sent to machine"
+    }
+  },
+  "gcode": {
+    "success": {
+      "command_executed": "G-code command executed successfully",
+      "file_processed": "G-code file processed successfully",
+      "sequence_completed": "Command sequence completed",
+      "validation_passed": "G-code validation passed"
+    },
+    "errors": {
+      "invalid_gcode": "Invalid G-code format",
+      "unsafe_command": "Command blocked for safety reasons",
+      "execution_failed": "G-code execution failed",
+      "file_not_found": "G-code file not found",
+      "file_invalid": "Invalid G-code file format"
+    }
+  },
+  "files": {
+    "success": {
+      "uploaded": "File uploaded successfully",
+      "deleted": "File deleted successfully",
+      "listed": "Files listed successfully",
+      "validated": "File validation completed"
+    },
+    "errors": {
+      "upload_failed": "File upload failed",
+      "file_not_found": "File not found",
+      "invalid_format": "Invalid file format",
+      "file_too_large": "File size exceeds maximum limit",
+      "delete_failed": "Failed to delete file"
+    }
+  },
+  "presets": {
+    "success": {
+      "saved": "Preset saved successfully",
+      "loaded": "Preset loaded successfully",
+      "deleted": "Preset deleted successfully",
+      "listed": "Presets listed successfully"
+    },
+    "errors": {
+      "not_found": "Preset not found",
+      "save_failed": "Failed to save preset",
+      "load_failed": "Failed to load preset",
+      "invalid_preset": "Invalid preset configuration"
+    }
+  },
+  "health": {
+    "success": {
+      "check_completed": "Health check completed successfully",
+      "diagnostics_retrieved": "Diagnostics retrieved successfully"
+    },
+    "errors": {
+      "check_failed": "Health check failed",
+      "diagnostics_failed": "Failed to retrieve diagnostics"
+    }
+  },
+  "common": {
+    "success": {
+      "operation_completed": "Operation completed successfully"
+    },
+    "errors": {
+      "internal_server_error": "Internal server error",
+      "invalid_json": "Invalid JSON format in request body",
+      "endpoint_not_found": "{method} {url} not found",
+      "method_not_allowed": "Method {method} not allowed for this endpoint",
+      "validation_failed": "Request validation failed",
+      "unauthorized": "Authentication required",
+      "forbidden": "Access denied",
+      "rate_limit_exceeded": "Rate limit exceeded. Please try again later."
+    }
+  }
+}

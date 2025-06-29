@@ -1,0 +1,127 @@
+{
+  "defaultPort": "/dev/tty.usbmodem1101",
+  "serialPort": {
+    "baudRate": 115200,
+    "dataBits": 8,
+    "parity": "none",
+    "stopBits": 1,
+    "flowControl": false,
+    "rtscts": false,
+    "autoOpen": false
+  },
+  "timeouts": {
+    "connection": 5000,
+    "command": 10000,
+    "emergency": 15000,
+    "initialization": 2000
+  },
+  "debug": false,
+  "verboseSerial": false,
+  "logLevel": "INFO",
+  "emergencyStopCommand": "M112",
+  "grbl": {
+    "lineEnding": "\r\n",
+    "initCommands": ["\r\n"],
+    "statusCommand": "?",
+    "settingsCommand": "$$",
+    "unlockCommand": "$X",
+    "homeCommand": "$H",
+    "resetCommand": "\u0018"
+  },
+  "machineLimits": {
+    "z": {
+      "max": 40,
+      "min": -28,
+      "totalTravel": 78.5
+    },
+    "y": {
+      "max": 200,
+      "min": -30,
+      "totalTravel": 241.5
+    },
+    "x": {
+      "max": 60,
+      "min": -24,
+      "totalTravel": 86.5
+    }
+  },
+  "presets": {
+    "toolChange": "G0 Z-10 X10 Y180",
+    "parkPosition": "G0 X0 Y0 Z0",
+    "homeAndCenter": ["$H", "G0 X30 Y100"],
+    "safeHeight": "G0 Z0",
+    "origin": "G0 X0 Y0 Z0",
+    "setupSequence": [
+      "$H",
+      "G0 Z0",
+      "G0 X30 Y100"
+    ]
+  },
+  "movementDebug": {
+    "enableDiagnostics": true,
+    "testMovements": [
+      "G0 X1",
+      "G0 X0",
+      "G0 Y1",
+      "G0 Y0",
+      "G0 Z1",
+      "G0 Z0"
+    ],
+    "diagnosticCommands": [
+      "?",
+      "$$",
+      "$#",
+      "$G"
+    ]
+  },
+  "ui": {
+    "diagnosticsEmojis": {
+      "success": "✅",
+      "failure": "❌",
+      "warning": "⚠️",
+      "info": "ℹ️",
+      "testing": "🎯",
+      "alarm": "🚨"
+    },
+    "reportSeparator": "============================================",
+    "progressFormat": "[{current}/{total}]",
+    "safetyWarning": "⚠️ SAFETY WARNING:",
+    "safetyCancelMsg": "   Command execution cancelled for safety.",
+    "emergencyIcon": "🚨",
+    "emergencyStopMsg": "EMERGENCY STOP INITIATED",
+    "emergencySuccessMsg": "✓ Emergency stop sent:",
+    "emergencyFailMsg": "✗ Emergency stop failed:",
+    "continueOnErrorMsg": "Error on line {line}, continuing with next command...",
+    "fileExecutionTitle": "📄 G-CODE FILE EXECUTION SUMMARY",
+    "queryReportTitle": "📊 MACHINE QUERY REPORT",
+    "successIcon": "✓",
+    "failIcon": "✗"
+  },
+  "validation": {
+    "gcodeFileExtensions": [".gcode", ".nc", ".txt"],
+    "gcodeCommandRegex": "^[GMT]\\d+",
+    "maxCommandLength": 256
+  },
+  "safety": {
+    "dangerousCommands": ["M30", "M02"]
+  },
+  "estimation": {
+    "avgCommandTime": 500,
+    "movementCommandTime": 1000
+  },
+  "connectionInitDelay": 100,
+  "retryDelay": 1000,
+  "verboseExecution": false,
+  "alarms": {
+    "recoverySteps": {
+      "1": ["Check that machine is within travel limits", "Use $X to unlock, then carefully jog to safe position"],
+      "2": ["Check G-code for values outside machine limits", "Use $X to unlock"],
+      "3": ["Use $X to unlock", "Re-home machine with $H"]
+    },
+    "descriptions": {
+      "1": "Hard limit triggered",
+      "2": "G-code motion target exceeds machine travel", 
+      "3": "Reset while in motion"
+    }
+  }
+}

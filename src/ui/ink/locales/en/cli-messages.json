@@ -1,0 +1,76 @@
+{
+  "navigation": {
+    "mainMenu": "Main Menu",
+    "back": "Back",
+    "quit": "Quit",
+    "help": "Help"
+  },
+  "gcode": {
+    "execution": "G-Code Execution",
+    "enterManually": "Enter G-Code Manually",
+    "selectFile": "Select G-Code File",
+    "preview": "Preview G-Code",
+    "execute": "Execute",
+    "running": "Running...",
+    "completed": "Completed",
+    "paused": "Paused",
+    "stopped": "Stopped",
+    "error": "Error",
+    "progress": "Progress",
+    "timeElapsed": "Time Elapsed",
+    "timeRemaining": "Time Remaining",
+    "totalTime": "Total Time"
+  },
+  "manual": {
+    "control": "Manual Control",
+    "position": "Position",
+    "stepSize": "Step Size",
+    "jogControls": "Jog Controls",
+    "spindleControls": "Spindle Controls",
+    "rpm": "RPM",
+    "direction": "Direction",
+    "coolant": "Coolant",
+    "emergencyStop": "Emergency Stop",
+    "home": "Home",
+    "homeAll": "Home All"
+  },
+  "settings": {
+    "title": "Settings",
+    "machine": "Machine Settings",
+    "units": "Units",
+    "limits": "Limits",
+    "speed": "Speed",
+    "travel": "Travel",
+    "save": "Save",
+    "cancel": "Cancel",
+    "reset": "Reset"
+  },
+  "status": {
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "idle": "Idle",
+    "run": "Run",
+    "hold": "Hold",
+    "jog": "Jog",
+    "alarm": "Alarm",
+    "door": "Door",
+    "check": "Check",
+    "home": "Home",
+    "sleep": "Sleep"
+  },
+  "units": {
+    "mm": "mm",
+    "inch": "inch",
+    "metric": "Metric",
+    "imperial": "Imperial"
+  },
+  "hotkeys": {
+    "global": "Global Hotkeys",
+    "contextual": "Screen Hotkeys",
+    "showGcodeReference": "Show G-Code Reference",
+    "toggleUnits": "Toggle Units",
+    "openSettings": "Open Settings",
+    "showHelp": "Show Help",
+    "quit": "Quit"
+  }
+}
