@@ -9,7 +9,7 @@
 import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import { info, error as logError } from '../../lib/logger/LoggerService.js';
+import { info, error as logError } from '@cnc/core/services/logger';
 import { corsMiddleware } from './middleware/cors.js';
 import { responseFormatter } from './shared/responseFormatter.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';

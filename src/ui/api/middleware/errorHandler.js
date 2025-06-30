@@ -4,7 +4,7 @@
  * Centralized error handling for all API endpoints
  */
 
-import { info, error as logError } from '../../../lib/logger/LoggerService.js';
+import { info, error as logError } from '@cnc/core/services/logger';
 import { ErrorCodes } from '../shared/responseFormatter.js';
 
 /**

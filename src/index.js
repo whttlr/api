@@ -1,17 +1,11 @@
 /**
- * CNC G-code Sender Application Public API
+ * CNC API Application Public API
  * 
- * Main entry point for the entire application with all modules.
+ * Re-exports core functionality from cnc-core and API-specific modules.
  */
 
-// Core modules
-export * from './cnc/index.js';
+// Core CNC functionality from cnc-core
+export * from '@cnc/core';
 
-// Services
-export * from './lib/index.js';
-
-// Interfaces
-export * from './ui/cli/index.js';
-
-// Utils
-export * from './utils/index.js';
+// API-specific exports
+export * from './ui/api/index.js';

@@ -1,314 +1,222 @@
 /**
- * API Parser for MCP Documentation Generation
+ * API Parser - Extracts endpoints from Express.js route files
  * 
- * Extracts API endpoint information from Express.js route files
- * with Swagger/OpenAPI documentation to generate MCP tool definitions.
+ * Scans the API route files and extracts endpoint information
+ * including HTTP methods, paths, descriptions, and parameters.
  */
 
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-class APIParser {
-  constructor() {
-    this.apiBasePath = path.join(__dirname, '../../src/ui/api');
-    this.featuresPath = path.join(this.apiBasePath, 'features');
+export class APIParser {
+  constructor(basePath) {
+    this.basePath = basePath;
     this.endpoints = [];
   }
 
   /**
-   * Parse all API route files and extract endpoint information
+   * Parse all route files and extract endpoints
    */
-  async parseAllRoutes() {
-    console.log('🔍 Parsing API routes for MCP documentation...');
+  async parseRoutes() {
+    const featuresPath = path.join(this.basePath, 'src/ui/api/features');
     
-    // Parse feature-based routes
-    const features = await this.getFeatureDirectories();
-    
-    for (const feature of features) {
-      await this.parseFeatureRoutes(feature);
+    try {
+      const features = await fs.readdir(featuresPath);
+      
+      for (const feature of features) {
+        const featurePath = path.join(featuresPath, feature);
+        const stat = await fs.stat(featurePath);
+        
+        if (stat.isDirectory()) {
+          await this.parseFeature(feature, featurePath);
+        }
+      }
+      
+      // Also parse main routes
+      await this.parseMainRoutes();
+      
+    } catch (error) {
+      console.error('Error parsing routes:', error.message);
     }
-
-    // Parse main route file
-    await this.parseMainRoutes();
-
-    console.log(`✅ Found ${this.endpoints.length} API endpoints`);
+    
     return this.endpoints;
   }
 
   /**
-   * Get list of feature directories
+   * Parse a specific feature directory
    */
-  async getFeatureDirectories() {
-    const featuresDir = this.featuresPath;
-    if (!fs.existsSync(featuresDir)) {
-      return [];
+  async parseFeature(featureName, featurePath) {
+    const routesFile = path.join(featurePath, 'routes.js');
+    
+    try {
+      await fs.access(routesFile);
+      const content = await fs.readFile(routesFile, 'utf8');
+      const endpoints = this.extractEndpointsFromFile(content, featureName);
+      this.endpoints.push(...endpoints);
+    } catch (error) {
+      // Routes file doesn't exist, skip
     }
-
-    return fs.readdirSync(featuresDir)
-      .filter(item => {
-        const itemPath = path.join(featuresDir, item);
-        return fs.statSync(itemPath).isDirectory();
-      });
   }
 
   /**
-   * Parse routes for a specific feature
-   */
-  async parseFeatureRoutes(featureName) {
-    const routesFile = path.join(this.featuresPath, featureName, 'routes.js');
-    
-    if (!fs.existsSync(routesFile)) {
-      console.log(`⚠️  No routes.js found for feature: ${featureName}`);
-      return;
-    }
-
-    const content = fs.readFileSync(routesFile, 'utf8');
-    const endpoints = this.extractEndpointsFromFile(content, featureName);
-    
-    console.log(`📋 Found ${endpoints.length} endpoints in ${featureName} feature`);
-    this.endpoints.push(...endpoints);
-  }
-
-  /**
-   * Parse main routes file
+   * Parse main API routes (health, info, etc.)
    */
   async parseMainRoutes() {
-    const mainRoutesFile = path.join(this.apiBasePath, 'routes/index.js');
+    const serverFile = path.join(this.basePath, 'src/ui/api/server.js');
     
-    if (!fs.existsSync(mainRoutesFile)) {
-      return;
+    try {
+      const content = await fs.readFile(serverFile, 'utf8');
+      const endpoints = this.extractEndpointsFromFile(content, 'main');
+      this.endpoints.push(...endpoints);
+    } catch (error) {
+      console.error('Error parsing main routes:', error.message);
     }
-
-    const content = fs.readFileSync(mainRoutesFile, 'utf8');
-    const endpoints = this.extractEndpointsFromFile(content, 'main');
-    
-    console.log(`📋 Found ${endpoints.length} endpoints in main routes`);
-    this.endpoints.push(...endpoints);
   }
 
   /**
-   * Extract endpoint information from a route file
+   * Extract endpoint information from route file content
    */
   extractEndpointsFromFile(content, featureName) {
     const endpoints = [];
-    const lines = content.split('\n');
     
-    let currentSwaggerDoc = null;
-    let currentEndpoint = null;
-    let inSwaggerDoc = false;
-    let swaggerLines = [];
+    // Extract route definitions using regex patterns
+    const routePatterns = [
+      /router\.(get|post|put|delete|patch)\s*\(\s*['"`]([^'"`]+)['"`]\s*,([^}]+)/gi,
+      /app\.(get|post|put|delete|patch)\s*\(\s*['"`]([^'"`]+)['"`]\s*,([^}]+)/gi
+    ];
 
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-
-      // Start of Swagger documentation
-      if (line.includes('* @swagger')) {
-        inSwaggerDoc = true;
-        swaggerLines = [];
-        continue;
-      }
-
-      // End of Swagger documentation (route definition)
-      if (inSwaggerDoc && line.startsWith('router.')) {
-        currentSwaggerDoc = this.parseSwaggerDoc(swaggerLines);
-        currentEndpoint = this.parseRouteDefinition(line);
+    routePatterns.forEach(pattern => {
+      let match;
+      while ((match = pattern.exec(content)) !== null) {
+        const [, method, path, handlerContent] = match;
         
-        if (currentSwaggerDoc && currentEndpoint) {
-          endpoints.push({
-            ...currentEndpoint,
-            ...currentSwaggerDoc,
-            feature: featureName,
-            sourceFile: `features/${featureName}/routes.js`
-          });
-        }
+        // Extract description from comments or handler names
+        const description = this.extractDescription(handlerContent, content, match.index);
         
-        inSwaggerDoc = false;
-        currentSwaggerDoc = null;
-        currentEndpoint = null;
-        continue;
-      }
+        // Create endpoint object
+        const endpoint = {
+          feature: featureName,
+          method: method.toUpperCase(),
+          path: this.normalizePath(path),
+          description: description || `${featureName} endpoint`,
+          tags: [this.capitalizeFirst(featureName)],
+          parameters: this.extractParameters(path, handlerContent)
+        };
 
-      // Collect Swagger documentation lines
-      if (inSwaggerDoc && line.startsWith('*')) {
-        swaggerLines.push(line.substring(1).trim());
+        endpoints.push(endpoint);
       }
-    }
+    });
 
     return endpoints;
   }
 
   /**
-   * Parse Swagger documentation block
+   * Extract description from comments or function names
    */
-  parseSwaggerDoc(swaggerLines) {
-    const doc = {
-      path: null,
-      method: null,
-      summary: null,
-      description: null,
-      tags: [],
-      parameters: [],
-      requestBody: null,
-      responses: {}
-    };
-
-    let currentSection = null;
-    let currentIndent = 0;
-
-    for (const line of swaggerLines) {
-      if (!line) continue;
-
-      const indent = line.search(/\S/);
-      const content = line.trim();
-
-      // Path definition
-      if (content.startsWith('/api/v1/')) {
-        const pathMatch = content.match(/^(\/api\/v1\/[^:]+):/);
-        if (pathMatch) {
-          doc.path = pathMatch[1];
-        }
-        continue;
-      }
-
-      // HTTP method
-      if (['get:', 'post:', 'put:', 'delete:', 'patch:'].includes(content)) {
-        doc.method = content.replace(':', '').toUpperCase();
-        continue;
-      }
-
-      // Summary
-      if (content.startsWith('summary:')) {
-        doc.summary = content.replace('summary:', '').trim();
-        continue;
-      }
-
-      // Description
-      if (content.startsWith('description:')) {
-        doc.description = content.replace('description:', '').trim();
-        continue;
-      }
-
-      // Tags
-      if (content.startsWith('tags:')) {
-        const tagsMatch = content.match(/tags:\s*\[([^\]]+)\]/);
-        if (tagsMatch) {
-          doc.tags = tagsMatch[1].split(',').map(tag => tag.trim());
-        }
-        continue;
-      }
-
-      // Parameters, requestBody, responses would need more complex parsing
-      // For now, capturing basic info is sufficient for MCP generation
-    }
-
-    return doc;
-  }
-
-  /**
-   * Parse Express route definition
-   */
-  parseRouteDefinition(line) {
-    const routeMatch = line.match(/router\.(get|post|put|delete|patch)\(['"](.*?)['"].*?\)/);
+  extractDescription(handlerContent, fullContent, matchIndex) {
+    // Look for comments before the route definition
+    const beforeRoute = fullContent.substring(Math.max(0, matchIndex - 200), matchIndex);
     
-    if (!routeMatch) return null;
-
-    return {
-      method: routeMatch[1].toUpperCase(),
-      routePath: routeMatch[2],
-      rawLine: line
-    };
-  }
-
-  /**
-   * Generate MCP-friendly endpoint data
-   */
-  generateMCPEndpoints() {
-    return this.endpoints.map(endpoint => ({
-      name: this.generateMCPToolName(endpoint),
-      path: endpoint.path || `/api/v1/${endpoint.feature}${endpoint.routePath}`,
-      method: endpoint.method,
-      summary: endpoint.summary || `${endpoint.method} ${endpoint.routePath}`,
-      description: endpoint.description || endpoint.summary,
-      feature: endpoint.feature,
-      tags: endpoint.tags || [endpoint.feature],
-      parameters: this.extractParameters(endpoint),
-      authentication: this.requiresAuthentication(endpoint),
-      sourceFile: endpoint.sourceFile
-    }));
-  }
-
-  /**
-   * Generate MCP tool name from endpoint
-   */
-  generateMCPToolName(endpoint) {
-    const feature = endpoint.feature;
-    const path = endpoint.routePath || endpoint.path;
-    const method = endpoint.method.toLowerCase();
-    
-    // Convert path to readable name
-    let pathName = path
-      .replace(/^\//, '')
-      .replace(/\//g, '_')
-      .replace(/[^a-zA-Z0-9_]/g, '');
-
-    // Handle common patterns
-    if (pathName === '') pathName = 'index';
-    if (pathName === 'status') pathName = 'get_status';
-    if (pathName === 'health') pathName = 'get_health';
-
-    // Combine with method and feature
-    if (method === 'get') {
-      return `${feature}_${pathName}`;
-    } else {
-      return `${feature}_${method}_${pathName}`;
+    // Extract JSDoc style comments
+    const jsdocMatch = beforeRoute.match(/\/\*\*\s*\n\s*\*\s*([^*\n]+)/);
+    if (jsdocMatch) {
+      return jsdocMatch[1].trim();
     }
+    
+    // Extract single line comments
+    const commentMatch = beforeRoute.match(/\/\/\s*([^\n]+)/);
+    if (commentMatch) {
+      return commentMatch[1].trim();
+    }
+    
+    // Extract from handler function names
+    const handlerMatch = handlerContent.match(/(\w+Controller|get\w+|post\w+|delete\w+)/);
+    if (handlerMatch) {
+      return this.humanizeMethodName(handlerMatch[1]);
+    }
+    
+    return null;
   }
 
   /**
-   * Extract parameters from endpoint
+   * Extract parameters from path and handler content
    */
-  extractParameters(endpoint) {
-    const params = [];
+  extractParameters(path, handlerContent) {
+    const parameters = [];
     
     // Extract path parameters
-    const pathParams = (endpoint.path || endpoint.routePath || '').match(/:(\w+)/g);
+    const pathParams = path.match(/:(\w+)/g);
     if (pathParams) {
       pathParams.forEach(param => {
-        params.push({
+        parameters.push({
           name: param.substring(1),
-          type: 'string',
           in: 'path',
-          required: true
+          required: true,
+          type: 'string'
         });
       });
     }
-
-    // For POST/PUT/PATCH, assume JSON body
-    if (['POST', 'PUT', 'PATCH'].includes(endpoint.method)) {
-      params.push({
+    
+    // Check if route expects body (POST, PUT, PATCH methods)
+    if (handlerContent.includes('req.body') || handlerContent.includes('body')) {
+      parameters.push({
         name: 'body',
-        type: 'object',
         in: 'body',
         required: true,
-        description: 'Request body data'
+        type: 'object'
       });
     }
-
-    return params;
+    
+    return parameters;
   }
 
   /**
-   * Determine if endpoint requires authentication
+   * Normalize API path for consistency
    */
-  requiresAuthentication(endpoint) {
-    // For now, assume no authentication required
-    // This could be enhanced to check for auth middleware
-    return false;
+  normalizePath(path) {
+    // Convert Express path params to OpenAPI format
+    return path.replace(/:(\w+)/g, '{$1}');
+  }
+
+  /**
+   * Convert method names to human readable descriptions
+   */
+  humanizeMethodName(methodName) {
+    return methodName
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase())
+      .trim();
+  }
+
+  /**
+   * Capitalize first letter
+   */
+  capitalizeFirst(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  /**
+   * Get endpoint statistics
+   */
+  getStatistics() {
+    const features = [...new Set(this.endpoints.map(e => e.feature))];
+    const methods = [...new Set(this.endpoints.map(e => e.method))];
+    
+    const toolsByFeature = {};
+    features.forEach(feature => {
+      toolsByFeature[feature] = this.endpoints.filter(e => e.feature === feature).length;
+    });
+    
+    return {
+      totalEndpoints: this.endpoints.length,
+      totalTools: this.endpoints.length,
+      features,
+      httpMethods: methods,
+      toolsByFeature
+    };
   }
 }
-
-export default APIParser;

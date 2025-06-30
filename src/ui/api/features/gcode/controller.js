@@ -4,10 +4,10 @@
  * Handles G-code execution, file operations, and queue management
  */
 
-import { info, error as logError } from '../../../../lib/logger/LoggerService.js';
+import { info, error as logError } from '@cnc/core/services/logger';
 import { asyncHandler, throwError } from '../../shared/middleware/errorHandler.js';
 import { ErrorCodes } from '../../shared/responseFormatter.js';
-import { getSharedGcodeSender } from '../../../../lib/shared/InstanceManager.js';
+import { getSharedGcodeSender } from '@cnc/core/services/shared/InstanceManager';
 import fs from 'fs/promises';
 import path from 'path';
 

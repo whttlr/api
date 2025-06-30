@@ -28,12 +28,12 @@ jest.mock('cors', () => {
 });
 
 // Mock logger
-jest.mock('../../../../lib/logger/LoggerService.js', () => ({
+jest.mock('@cnc/core/services/logger', () => ({
   info: jest.fn()
 }));
 
 import cors from 'cors';
-import { info } from '../../../../lib/logger/LoggerService.js';
+import { info } from '@cnc/core/services/logger';
 
 describe('CORS Middleware', () => {
   let req, res, next;

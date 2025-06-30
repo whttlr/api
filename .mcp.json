@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "cnc-gcode-sender": {
+      "command": "node",
+      "args": ["/Users/tylerhenry/Desktop/whttlr/api/docs/mcp/server.js"],
+      "env": {
+        "CNC_API_BASE_URL": "http://localhost:3000"
+      }
+    }
+  }
+}

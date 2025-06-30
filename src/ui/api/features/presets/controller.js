@@ -4,15 +4,15 @@
  * Handles preset management operations using the existing PresetsService
  */
 
-import { info, error as logError } from '../../../../lib/logger/LoggerService.js';
+import { info, error as logError } from '@cnc/core/services/logger';
 import { asyncHandler, throwError } from '../../shared/middleware/errorHandler.js';
 import { ErrorCodes } from '../../shared/responseFormatter.js';
-import { getSharedGcodeSender } from '../../../../lib/shared/InstanceManager.js';
-import { presetsService } from '../../../../lib/presets/index.js';
-import { Config } from '../../../../cnc/config.js';
+import { getSharedGcodeSender } from '@cnc/core/services/shared/InstanceManager';
+import { presetsService } from '@cnc/core/services/presets';
+import { defaultConfig } from '@cnc/core/config';
 
-// Load configuration
-const CONFIG = Config.get();
+// Use default configuration
+const CONFIG = defaultConfig;
 
 /**
  * Get shared GcodeSender instance

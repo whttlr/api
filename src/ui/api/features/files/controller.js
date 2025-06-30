@@ -4,7 +4,7 @@
  * Handles G-code file management operations including upload, download, list, and CRUD operations
  */
 
-import { info, error as logError } from '../../../../lib/logger/LoggerService.js';
+import { info, error as logError } from '@cnc/core/services/logger';
 import { asyncHandler, throwError } from '../../shared/middleware/errorHandler.js';
 import { ErrorCodes } from '../../shared/responseFormatter.js';
 import { getFilePath, getUploadInfo } from './middleware/fileUpload.js';

@@ -1,199 +1,95 @@
 #!/usr/bin/env node
 
 /**
- * MCP Documentation Generation Script
+ * MCP Documentation Generator
  * 
- * Orchestrates the parsing of API routes and generation of MCP server documentation.
- * This script is designed to be run during development to keep MCP tools synchronized
- * with API changes.
+ * Generates MCP (Model Context Protocol) documentation from API routes.
+ * Parses Express.js API endpoints and creates complete MCP server implementation.
  */
 
-import fs from 'fs';
+import { APIParser } from './api-parser.js';
+import { ToolGenerator } from './tool-generator.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import APIParser from './api-parser.js';
-import MCPToolGenerator from './tool-generator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-class MCPDocumentationGenerator {
-  constructor() {
-    this.outputDir = path.join(__dirname, '../../docs/mcp');
-    this.parser = new APIParser();
-    this.generator = new MCPToolGenerator();
-  }
+async function main() {
+  console.log('🔧 MCP Documentation Generator');
+  console.log('📝 Generating MCP documentation from API routes...');
 
-  /**
-   * Main generation process
-   */
-  async generate() {
-    console.log('🚀 Starting MCP documentation generation...');
-    console.log(`📁 Output directory: ${this.outputDir}`);
-
-    try {
-      // Step 1: Parse API routes
-      console.log('\n📖 Step 1: Parsing API routes...');
-      const rawEndpoints = await this.parser.parseAllRoutes();
-      
-      if (rawEndpoints.length === 0) {
-        console.log('⚠️  No API endpoints found. Check API route files.');
-        return;
-      }
-
-      // Step 2: Generate MCP-compatible endpoint data  
-      console.log('\n🔄 Step 2: Processing endpoints for MCP...');
-      const endpoints = this.parser.generateMCPEndpoints();
-      
-      // Step 3: Generate MCP server and documentation
-      console.log('\n🔧 Step 3: Generating MCP server...');
-      const mcpServer = this.generator.generateMCPServer(endpoints);
-
-      // Step 4: Write output files
-      console.log('\n💾 Step 4: Writing output files...');
-      await this.writeOutputFiles(mcpServer);
-
-      // Step 5: Generate summary report
-      console.log('\n📊 Step 5: Generating summary...');
-      this.generateSummary(endpoints, mcpServer.tools);
-
-      console.log('\n✅ MCP documentation generation completed successfully!');
-      console.log(`📋 Generated ${mcpServer.tools.length} MCP tools`);
-      console.log(`📁 Files written to: ${this.outputDir}`);
-
-    } catch (error) {
-      console.error('\n❌ Error generating MCP documentation:', error.message);
-      console.error(error.stack);
+  try {
+    // Get the project root (3 levels up from scripts/mcp/)
+    const projectRoot = path.resolve(__dirname, '../../');
+    
+    // Parse API routes
+    console.log('🔍 Parsing API routes...');
+    const parser = new APIParser(projectRoot);
+    const endpoints = await parser.parseRoutes();
+    
+    console.log(`📊 Found ${endpoints.length} API endpoints`);
+    
+    if (endpoints.length === 0) {
+      console.log('⚠️  No endpoints found. Check API route files exist.');
       process.exit(1);
     }
-  }
 
-  /**
-   * Create output directory if it doesn't exist
-   */
-  ensureOutputDirectory() {
-    if (!fs.existsSync(this.outputDir)) {
-      fs.mkdirSync(this.outputDir, { recursive: true });
-      console.log(`📁 Created output directory: ${this.outputDir}`);
-    }
-  }
-
-  /**
-   * Write all generated files to disk
-   */
-  async writeOutputFiles(mcpServer) {
-    this.ensureOutputDirectory();
-
-    const files = [
-      {
-        filename: 'server.js',
-        content: mcpServer.serverCode,
-        description: 'MCP server implementation'
-      },
-      {
-        filename: 'package.json',
-        content: JSON.stringify(mcpServer.packageJson, null, 2),
-        description: 'Package configuration'
-      },
-      {
-        filename: 'README.md',
-        content: mcpServer.readme,
-        description: 'Documentation and usage guide'
-      },
-      {
-        filename: 'tools.json',
-        content: JSON.stringify(mcpServer.tools, null, 2),
-        description: 'MCP tool definitions'
-      }
-    ];
-
-    for (const file of files) {
-      const filePath = path.join(this.outputDir, file.filename);
-      fs.writeFileSync(filePath, file.content, 'utf8');
-      console.log(`  ✓ ${file.filename} - ${file.description}`);
-    }
-
-    // Make server.js executable
-    const serverPath = path.join(this.outputDir, 'server.js');
-    fs.chmodSync(serverPath, '755');
-    console.log('  ✓ Made server.js executable');
-  }
-
-  /**
-   * Generate and display summary information
-   */
-  generateSummary(endpoints, tools) {
-    const summary = {
-      generatedAt: new Date().toISOString(),
-      statistics: {
-        totalEndpoints: endpoints.length,
-        totalTools: tools.length,
-        features: [...new Set(endpoints.map(e => e.feature))],
-        httpMethods: [...new Set(endpoints.map(e => e.method))]
-      },
-      toolsByFeature: this.groupToolsByFeature(endpoints),
-      files: [
-        'server.js - Main MCP server implementation',
-        'package.json - NPM package configuration', 
-        'README.md - Documentation and usage guide',
-        'tools.json - MCP tool definitions in JSON format'
-      ]
-    };
-
-    // Write summary to file
-    const summaryPath = path.join(this.outputDir, 'generation-summary.json');
-    fs.writeFileSync(summaryPath, JSON.stringify(summary, null, 2));
-
-    // Display summary
-    console.log('\n📊 Generation Summary:');
-    console.log(`   • Endpoints processed: ${summary.statistics.totalEndpoints}`);
-    console.log(`   • MCP tools generated: ${summary.statistics.totalTools}`);
-    console.log(`   • Features: ${summary.statistics.features.join(', ')}`);
-    console.log(`   • HTTP methods: ${summary.statistics.httpMethods.join(', ')}`);
-    
-    console.log('\n📋 Tools by Feature:');
-    Object.entries(summary.toolsByFeature).forEach(([feature, count]) => {
-      console.log(`   • ${feature}: ${count} tools`);
+    // Generate MCP tools and server
+    console.log('🛠️  Generating MCP tools...');
+    const generator = new ToolGenerator(endpoints, {
+      outputDir: path.join(projectRoot, 'docs/mcp')
     });
-  }
-
-  /**
-   * Group tools by feature for summary
-   */
-  groupToolsByFeature(endpoints) {
-    const groups = {};
-    endpoints.forEach(endpoint => {
-      const feature = endpoint.feature || 'main';
-      groups[feature] = (groups[feature] || 0) + 1;
-    });
-    return groups;
-  }
-
-  /**
-   * Validate generated MCP server
-   */
-  async validateGeneration() {
-    const serverPath = path.join(this.outputDir, 'server.js');
-    const packagePath = path.join(this.outputDir, 'package.json');
     
-    const requiredFiles = [serverPath, packagePath];
-    const missingFiles = requiredFiles.filter(file => !fs.existsSync(file));
+    const result = await generator.generateAll();
     
-    if (missingFiles.length > 0) {
-      throw new Error(`Missing required files: ${missingFiles.join(', ')}`);
-    }
+    console.log('✅ MCP documentation generated successfully!');
+    console.log(`📁 Output directory: ${result.outputDir}`);
+    console.log(`🔧 Generated ${result.tools.length} MCP tools`);
+    
+    // Display statistics
+    const stats = parser.getStatistics();
+    console.log('\n📈 Generation Statistics:');
+    console.log(`   Total endpoints: ${stats.totalEndpoints}`);
+    console.log(`   Features: ${stats.features.join(', ')}`);
+    console.log(`   HTTP methods: ${stats.httpMethods.join(', ')}`);
+    console.log('\n📦 Generated files:');
+    console.log('   • server.js - MCP server implementation');
+    console.log('   • tools.json - Tool definitions');
+    console.log('   • README.md - Documentation');
+    console.log('   • package.json - NPM configuration');
+    console.log('   • generation-summary.json - Statistics');
+    
+    console.log('\n🚀 To use the MCP server:');
+    console.log(`   cd ${result.outputDir}`);
+    console.log('   npm install');
+    console.log('   npm start');
 
-    console.log('✅ Validation passed - all required files generated');
+  } catch (error) {
+    console.error('❌ Generation failed:', error.message);
+    console.error(error.stack);
+    process.exit(1);
   }
 }
 
-// Run the generator if this script is executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const generator = new MCPDocumentationGenerator();
-  generator.generate().catch(error => {
-    console.error('Fatal error:', error);
-    process.exit(1);
+// Handle command line arguments
+const args = process.argv.slice(2);
+const force = args.includes('--force') || args.includes('-f');
+
+if (force) {
+  console.log('🔄 Force regeneration requested');
+  main();
+} else {
+  // Check if docs already exist
+  const docsPath = path.join(process.cwd(), 'docs', 'mcp');
+  import('fs').then(fs => {
+    if (fs.existsSync(docsPath)) {
+      console.log('✅ MCP documentation already exists in docs/mcp/');
+      console.log('💡 Use --force flag to regenerate: npm run generate:mcp -- --force');
+      console.log('📊 Current files maintained, no changes made');
+    } else {
+      console.log('📋 No existing MCP docs found, generating fresh documentation...');
+      main();
+    }
   });
 }
-
-export default MCPDocumentationGenerator;

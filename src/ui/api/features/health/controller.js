@@ -4,9 +4,9 @@
  * Provides help information, command documentation, and system health information through the API
  */
 
-import { info } from '../../../../lib/logger/LoggerService.js';
+import { info } from '@cnc/core/services/logger';
 import { asyncHandler } from '../../shared/middleware/errorHandler.js';
-import { Config } from '../../../../cnc/config.js';
+import { Config } from '@cnc/core/cnc/config';
 
 // Load configuration
 const CONFIG = Config.get();

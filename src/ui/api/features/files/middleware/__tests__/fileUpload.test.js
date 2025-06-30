@@ -36,14 +36,14 @@ jest.mock('multer', () => {
 });
 
 // Mock logger
-jest.mock('../../../../../../lib/logger/LoggerService.js', () => ({
+jest.mock('@cnc/core/services/logger', () => ({
   info: jest.fn(),
   error: jest.fn()
 }));
 
 import fs from 'fs/promises';
 import multer from 'multer';
-import { info, error as logError } from '../../../../../../lib/logger/LoggerService.js';
+import { info, error as logError } from '@cnc/core/services/logger';
 
 describe('File Upload Middleware', () => {
   beforeEach(() => {

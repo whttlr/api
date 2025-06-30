@@ -7,7 +7,7 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs/promises';
-import { info, error as logError } from '../../../../../lib/logger/LoggerService.js';
+import { info, error as logError } from '@cnc/core/services/logger';
 import { ErrorCodes } from '../../../shared/responseFormatter.js';
 
 // Define allowed file types

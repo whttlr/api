@@ -64,11 +64,11 @@ const mockApiMessages = {
 };
 
 // Mock modules
-jest.unstable_mockModule('../../../../lib/shared/InstanceManager.js', () => ({
+jest.unstable_mockModule('@cnc/core/services/shared/InstanceManager', () => ({
   default: mockInstanceManager
 }));
 
-jest.unstable_mockModule('../../../../lib/logger/LoggerService.js', () => mockLogger);
+jest.unstable_mockModule('@cnc/core/services/logger', () => mockLogger);
 
 jest.unstable_mockModule('../../config/messages.js', () => ({
   getApiMessages: jest.fn(() => mockApiMessages)

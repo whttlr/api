@@ -7,7 +7,7 @@ import { ErrorCodes } from '../../responseFormatter.js';
 import { createMockRequest, createMockResponse, createMockNext, createMockError } from '../../__mocks__/express-mocks.js';
 
 // Mock the logger
-jest.mock('../../../../../lib/logger/LoggerService.js', () => ({
+jest.mock('@cnc/core/services/logger', () => ({
   error: jest.fn()
 }));
 
@@ -21,7 +21,7 @@ jest.mock('../../../config/messages.js', () => ({
   }))
 }));
 
-import { error as logError } from '../../../../../lib/logger/LoggerService.js';
+import { error as logError } from '@cnc/core/services/logger';
 import { getApiMessages } from '../../../config/messages.js';
 
 describe('Shared Error Handler Middleware', () => {

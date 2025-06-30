@@ -5,10 +5,10 @@
  * Migrated to feature-based architecture with externalized configuration.
  */
 
-import { info, error as logError } from '../../../../lib/logger/LoggerService.js';
+import { info, error as logError } from '@cnc/core/services/logger';
 import { asyncHandler, throwError } from '../../shared/middleware/errorHandler.js';
 import { ErrorCodes } from '../../shared/responseFormatter.js';
-import { getSharedGcodeSender, resetSharedGcodeSender } from '../../../../lib/shared/InstanceManager.js';
+import { getSharedGcodeSender, resetSharedGcodeSender } from '@cnc/core/services/shared/InstanceManager';
 import { getApiMessages } from '../../config/messages.js';
 
 /**

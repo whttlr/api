@@ -1,150 +1,160 @@
 /**
- * MCP Tool Generator
+ * MCP Tool Generator - Converts API endpoints to MCP tools
  * 
- * Converts API endpoint data into MCP (Model Context Protocol) tool definitions
- * and generates a complete MCP server implementation.
+ * Takes parsed API endpoints and generates MCP (Model Context Protocol)
+ * tool definitions and server implementation.
  */
 
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
-class MCPToolGenerator {
-  constructor() {
-    this.tools = [];
-    this.baseUrl = 'http://localhost:3000';
-  }
-
-  /**
-   * Generate MCP tools from API endpoints
-   */
-  generateTools(endpoints) {
-    console.log('🔧 Generating MCP tools from API endpoints...');
-    
-    this.tools = endpoints.map(endpoint => this.createMCPTool(endpoint));
-    
-    console.log(`✅ Generated ${this.tools.length} MCP tools`);
-    return this.tools;
-  }
-
-  /**
-   * Create a single MCP tool from an API endpoint
-   */
-  createMCPTool(endpoint) {
-    const tool = {
-      name: endpoint.name,
-      description: this.generateToolDescription(endpoint),
-      inputSchema: this.generateInputSchema(endpoint)
+export class ToolGenerator {
+  constructor(endpoints, config = {}) {
+    this.endpoints = endpoints;
+    this.config = {
+      serverName: 'cnc-gcode-sender',
+      serverVersion: '1.0.0',
+      baseUrl: 'http://localhost:3000',
+      outputDir: './docs/mcp',
+      ...config
     };
+  }
 
-    return tool;
+  /**
+   * Generate all MCP documentation files
+   */
+  async generateAll() {
+    const tools = this.generateTools();
+    const server = this.generateServer(tools);
+    const readme = this.generateReadme(tools);
+    const packageJson = this.generatePackageJson();
+    const summary = this.generateSummary(tools);
+
+    // Ensure output directory exists
+    await fs.mkdir(this.config.outputDir, { recursive: true });
+
+    // Write all files
+    await Promise.all([
+      fs.writeFile(path.join(this.config.outputDir, 'server.js'), server),
+      fs.writeFile(path.join(this.config.outputDir, 'tools.json'), JSON.stringify(tools, null, 2)),
+      fs.writeFile(path.join(this.config.outputDir, 'README.md'), readme),
+      fs.writeFile(path.join(this.config.outputDir, 'package.json'), JSON.stringify(packageJson, null, 2)),
+      fs.writeFile(path.join(this.config.outputDir, 'generation-summary.json'), JSON.stringify(summary, null, 2))
+    ]);
+
+    return {
+      tools,
+      server,
+      readme,
+      packageJson,
+      summary,
+      outputDir: this.config.outputDir
+    };
+  }
+
+  /**
+   * Generate MCP tool definitions from endpoints
+   */
+  generateTools() {
+    return this.endpoints.map(endpoint => {
+      const toolName = this.generateToolName(endpoint);
+      const inputSchema = this.generateInputSchema(endpoint);
+      const description = this.generateToolDescription(endpoint);
+
+      return {
+        name: toolName,
+        description,
+        inputSchema
+      };
+    });
+  }
+
+  /**
+   * Generate tool name from endpoint
+   */
+  generateToolName(endpoint) {
+    const feature = endpoint.feature.toLowerCase();
+    const method = endpoint.method.toLowerCase();
+    const pathParts = endpoint.path
+      .replace('/api/v1/', '')
+      .split('/')
+      .filter(part => part && !part.startsWith('{'))
+      .join('_');
+
+    if (method === 'get' && pathParts) {
+      return `${feature}_${pathParts}`;
+    } else if (method !== 'get') {
+      return pathParts ? `${feature}_${method}_${pathParts}` : `${feature}_${method}_index`;
+    } else {
+      return `${feature}_${method}_index`;
+    }
   }
 
   /**
    * Generate tool description
    */
   generateToolDescription(endpoint) {
-    let description = endpoint.summary || endpoint.description || `${endpoint.method} ${endpoint.path}`;
+    const tag = endpoint.tags?.[0] || endpoint.feature.toUpperCase();
+    const desc = endpoint.description || `${endpoint.feature} endpoint`;
     
-    // Add feature context
-    if (endpoint.feature && endpoint.feature !== 'main') {
-      description = `[${endpoint.feature.toUpperCase()}] ${description}`;
-    }
-
-    // Add method and path info
-    description += `\n\nEndpoint: ${endpoint.method} ${endpoint.path}`;
-    
-    if (endpoint.tags && endpoint.tags.length > 0) {
-      description += `\nTags: ${endpoint.tags.join(', ')}`;
-    }
-
-    return description;
+    return `[${tag}] ${desc}\n\nEndpoint: ${endpoint.method} ${endpoint.path}\nTags: ${endpoint.tags?.join(', ') || endpoint.feature}`;
   }
 
   /**
-   * Generate JSON Schema for tool input parameters
+   * Generate input schema for tool
    */
   generateInputSchema(endpoint) {
-    const schema = {
-      type: 'object',
-      properties: {},
-      required: []
+    const properties = {
+      baseUrl: {
+        type: 'string',
+        description: 'Base URL of the CNC API server',
+        default: this.config.baseUrl
+      }
     };
 
-    // Add path parameters
-    endpoint.parameters.forEach(param => {
-      if (param.in === 'path') {
-        schema.properties[param.name] = {
-          type: param.type || 'string',
-          description: param.description || `Path parameter: ${param.name}`
-        };
-        if (param.required) {
-          schema.required.push(param.name);
-        }
-      }
-    });
+    const required = [];
 
-    // Add query parameters
-    endpoint.parameters.forEach(param => {
-      if (param.in === 'query') {
-        schema.properties[param.name] = {
-          type: param.type || 'string',
-          description: param.description || `Query parameter: ${param.name}`
-        };
-        if (param.required) {
-          schema.required.push(param.name);
-        }
-      }
-    });
-
-    // Add request body for POST/PUT/PATCH
+    // Add body parameter for POST/PUT/PATCH requests
     if (['POST', 'PUT', 'PATCH'].includes(endpoint.method)) {
-      schema.properties.body = {
+      properties.body = {
         type: 'object',
         description: 'Request body data',
         additionalProperties: true
       };
       
       // Make body required for certain endpoints
-      if (endpoint.path.includes('/connect') || endpoint.path.includes('/execute')) {
-        schema.required.push('body');
+      if (endpoint.path.includes('connect') || endpoint.path.includes('execute')) {
+        required.push('body');
       }
     }
 
-    // Add base URL parameter for configuration
-    schema.properties.baseUrl = {
-      type: 'string',
-      description: 'Base URL of the CNC API server',
-      default: this.baseUrl
-    };
+    // Add path parameters
+    endpoint.parameters?.forEach(param => {
+      if (param.in === 'path') {
+        properties[param.name] = {
+          type: param.type || 'string',
+          description: `Path parameter: ${param.name}`
+        };
+        if (param.required) {
+          required.push(param.name);
+        }
+      }
+    });
 
-    return schema;
+    return {
+      type: 'object',
+      properties,
+      required
+    };
   }
 
   /**
    * Generate complete MCP server implementation
    */
-  generateMCPServer(endpoints) {
-    const tools = this.generateTools(endpoints);
-    
-    const serverCode = this.generateServerCode(tools, endpoints);
-    const packageJson = this.generatePackageJson();
-    const readme = this.generateReadme(tools);
-    
-    return {
-      serverCode,
-      packageJson,
-      readme,
-      tools
-    };
-  }
-
-  /**
-   * Generate the main MCP server JavaScript code
-   */
-  generateServerCode(tools, endpoints) {
-    const toolImplementations = endpoints.map(endpoint => 
-      this.generateToolImplementation(endpoint)
-    ).join('\n\n');
+  generateServer(tools) {
+    const serverClass = this.generateServerClass(tools);
+    const toolHandlers = this.generateToolHandlers();
+    const helperMethods = this.generateHelperMethods();
 
     return `#!/usr/bin/env node
 
@@ -164,12 +174,35 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 
-class CNCMCPServer {
+${serverClass}
+
+${toolHandlers}
+
+${helperMethods}
+
+const server = new CNCMCPServer();
+server.run().catch(console.error);
+`;
+  }
+
+  /**
+   * Generate the main server class
+   */
+  generateServerClass(tools) {
+    const toolsList = tools.map(tool => {
+      return `          ${JSON.stringify(tool, null, 10).replace(/\n/g, '\n          ')}`;
+    }).join(',\n');
+
+    const toolCases = tools.map(tool => {
+      return `          case '${tool.name}':\n            return await this.${tool.name}(args);`;
+    }).join('\n');
+
+    return `class CNCMCPServer {
   constructor() {
     this.server = new Server(
       {
-        name: 'cnc-gcode-sender',
-        version: '1.0.0',
+        name: '${this.config.serverName}',
+        version: '${this.config.serverVersion}',
       },
       {
         capabilities: {
@@ -178,7 +211,7 @@ class CNCMCPServer {
       }
     );
 
-    this.baseUrl = process.env.CNC_API_BASE_URL || 'http://localhost:3000';
+    this.baseUrl = process.env.CNC_API_BASE_URL || '${this.config.baseUrl}';
     this.setupToolHandlers();
   }
 
@@ -187,7 +220,7 @@ class CNCMCPServer {
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
       return {
         tools: [
-${tools.map(tool => `          ${JSON.stringify(tool, null, 10).replace(/\n/g, '\n          ')}`).join(',\n')}
+${toolsList}
         ],
       };
     });
@@ -198,8 +231,7 @@ ${tools.map(tool => `          ${JSON.stringify(tool, null, 10).replace(/\n/g, '
 
       try {
         switch (name) {
-${endpoints.map(endpoint => `          case '${endpoint.name}':
-            return await this.${this.sanitizeFunctionName(endpoint.name)}(args);`).join('\n')}
+${toolCases}
           default:
             throw new Error(\`Unknown tool: \${name}\`);
         }
@@ -215,10 +247,50 @@ ${endpoints.map(endpoint => `          case '${endpoint.name}':
         };
       }
     });
+  }`;
   }
 
-${toolImplementations}
+  /**
+   * Generate tool handler methods
+   */
+  generateToolHandlers() {
+    return this.endpoints.map(endpoint => {
+      const toolName = this.generateToolName(endpoint);
+      const method = endpoint.method;
+      const apiPath = endpoint.path;
+      const description = endpoint.description || `${endpoint.feature} endpoint`;
 
+      // Handle path parameters
+      let pathTemplate = apiPath;
+      endpoint.parameters?.forEach(param => {
+        if (param.in === 'path') {
+          pathTemplate = pathTemplate.replace(`{${param.name}}`, `\${args.${param.name} || '{${param.name}}'}`);
+        }
+      });
+
+      return `
+  /**
+   * ${description}
+   */
+  async ${toolName}(args) {
+    const baseUrl = args.baseUrl || this.baseUrl;
+    let path = \`${pathTemplate}\`;
+    
+    // Remove undefined path parameters
+    path = path.replace(/\\\$\\{undefined\\}/g, '');
+    
+    const body = ['POST', 'PUT', 'PATCH'].includes('${method}') ? args.body : null;
+    
+    return await this.makeApiRequest('${method}', path, body, baseUrl);
+  }`;
+    }).join('\n');
+  }
+
+  /**
+   * Generate helper methods
+   */
+  generateHelperMethods() {
+    return `
   /**
    * Make HTTP request to CNC API
    */
@@ -263,68 +335,25 @@ ${toolImplementations}
     await this.server.connect(transport);
     console.error('CNC MCP server running on stdio');
   }
-}
-
-const server = new CNCMCPServer();
-server.run().catch(console.error);
-`;
+}`;
   }
 
   /**
-   * Generate implementation for a specific tool
-   */
-  generateToolImplementation(endpoint) {
-    const functionName = this.sanitizeFunctionName(endpoint.name);
-    const pathWithParams = endpoint.path.replace(/:(\w+)/g, '${args.$1}');
-
-    return `  /**
-   * ${endpoint.summary || endpoint.description || `${endpoint.method} ${endpoint.path}`}
-   */
-  async ${functionName}(args) {
-    const baseUrl = args.baseUrl || this.baseUrl;
-    let path = \`${pathWithParams}\`;
-    
-    // Remove undefined path parameters
-    path = path.replace(/\\\$\\{undefined\\}/g, '');
-    
-    const body = ['POST', 'PUT', 'PATCH'].includes('${endpoint.method}') ? args.body : null;
-    
-    return await this.makeApiRequest('${endpoint.method}', path, body, baseUrl);
-  }`;
-  }
-
-  /**
-   * Sanitize function name for JavaScript
-   */
-  sanitizeFunctionName(name) {
-    return name.replace(/[^a-zA-Z0-9_]/g, '_').replace(/^(\d)/, '_$1');
-  }
-
-  /**
-   * Generate package.json for MCP server
-   */
-  generatePackageJson() {
-    return {
-      name: 'cnc-mcp-server',
-      version: '1.0.0',
-      description: 'MCP server for CNC G-code Sender API',
-      main: 'server.js',
-      type: 'module',
-      scripts: {
-        start: 'node server.js'
-      },
-      dependencies: {
-        '@modelcontextprotocol/sdk': '^0.4.0'
-      },
-      keywords: ['mcp', 'cnc', 'gcode', 'api'],
-      generated: new Date().toISOString()
-    };
-  }
-
-  /**
-   * Generate README for MCP server
+   * Generate README documentation
    */
   generateReadme(tools) {
+    const toolDocs = tools.map(tool => {
+      return `### ${tool.name}
+
+${tool.description}
+
+**Input Parameters:**
+\`\`\`json
+${JSON.stringify(tool.inputSchema, null, 2)}
+\`\`\`
+`;
+    }).join('\n');
+
     return `# CNC G-code Sender MCP Server
 
 Generated MCP (Model Context Protocol) server for the CNC G-code Sender API.
@@ -333,15 +362,7 @@ Generated MCP (Model Context Protocol) server for the CNC G-code Sender API.
 
 This MCP server provides ${tools.length} tools for interacting with the CNC API:
 
-${tools.map(tool => `### ${tool.name}
-
-${tool.description}
-
-**Input Parameters:**
-\`\`\`json
-${JSON.stringify(tool.inputSchema, null, 2)}
-\`\`\`
-`).join('\n')}
+${toolDocs}
 
 ## Installation
 
@@ -352,7 +373,7 @@ npm install
 
 2. Set environment variables (optional):
 \`\`\`bash
-export CNC_API_BASE_URL=http://localhost:3000
+export CNC_API_BASE_URL=${this.config.baseUrl}
 \`\`\`
 
 3. Run the MCP server:
@@ -364,7 +385,7 @@ npm start
 
 The server can be configured using environment variables:
 
-- \`CNC_API_BASE_URL\`: Base URL of the CNC API server (default: http://localhost:3000)
+- \`CNC_API_BASE_URL\`: Base URL of the CNC API server (default: ${this.config.baseUrl})
 
 ## Generated Information
 
@@ -379,11 +400,11 @@ Add this to your Claude Desktop configuration:
 \`\`\`json
 {
   "mcpServers": {
-    "cnc-gcode-sender": {
+    "${this.config.serverName}": {
       "command": "node",
       "args": ["/path/to/this/server.js"],
       "env": {
-        "CNC_API_BASE_URL": "http://localhost:3000"
+        "CNC_API_BASE_URL": "${this.config.baseUrl}"
       }
     }
   }
@@ -391,6 +412,56 @@ Add this to your Claude Desktop configuration:
 \`\`\`
 `;
   }
-}
 
-export default MCPToolGenerator;
+  /**
+   * Generate package.json for MCP server
+   */
+  generatePackageJson() {
+    return {
+      name: `${this.config.serverName}-mcp`,
+      version: this.config.serverVersion,
+      description: 'MCP server for CNC G-code Sender API',
+      main: 'server.js',
+      type: 'module',
+      scripts: {
+        start: 'node server.js'
+      },
+      dependencies: {
+        '@modelcontextprotocol/sdk': '^0.4.0'
+      },
+      keywords: ['mcp', 'model-context-protocol', 'cnc', 'gcode'],
+      author: 'Generated by MCP Tool Generator',
+      license: 'MIT'
+    };
+  }
+
+  /**
+   * Generate summary statistics
+   */
+  generateSummary(tools) {
+    const features = [...new Set(this.endpoints.map(e => e.feature))];
+    const methods = [...new Set(this.endpoints.map(e => e.method))];
+    
+    const toolsByFeature = {};
+    features.forEach(feature => {
+      toolsByFeature[feature] = this.endpoints.filter(e => e.feature === feature).length;
+    });
+
+    return {
+      generatedAt: new Date().toISOString(),
+      statistics: {
+        totalEndpoints: this.endpoints.length,
+        totalTools: tools.length,
+        features,
+        httpMethods: methods,
+        toolsByFeature
+      },
+      files: [
+        'server.js - Main MCP server implementation',
+        'package.json - NPM package configuration',  
+        'README.md - Documentation and usage guide',
+        'tools.json - MCP tool definitions in JSON format'
+      ]
+    };
+  }
+}

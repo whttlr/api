@@ -5,7 +5,7 @@
  */
 
 import cors from 'cors';
-import { info } from '../../../lib/logger/LoggerService.js';
+import { info } from '@cnc/core/services/logger';
 
 /**
  * CORS configuration options

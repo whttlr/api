@@ -4,7 +4,7 @@
  * Centralized error handling and async wrapper utilities.
  */
 
-import { error as logError } from '../../../../lib/logger/LoggerService.js';
+import { error as logError } from '@cnc/core/services/logger';
 import { ErrorCodes } from '../responseFormatter.js';
 import { getApiMessages } from '../../config/messages.js';
 
