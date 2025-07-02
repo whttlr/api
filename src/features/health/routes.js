@@ -5,7 +5,7 @@
  */
 
 import express from 'express';
-import { getHealth, getDetailedHealth } from './controller.js';
+import { getHealth, getHelp, getDetailedHealth } from './controller.js';
 
 const router = express.Router();
 
@@ -69,6 +69,7 @@ const router = express.Router();
  *         $ref: '#/components/responses/InternalError'
  */
 router.get('/health', getHealth);
+router.get('/help', getHelp);
 
 /**
  * @swagger

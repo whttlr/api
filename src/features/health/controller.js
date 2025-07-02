@@ -15,6 +15,28 @@ const CONFIG = Config.get();
  * Get basic health status
  */
 export const getHealth = asyncHandler(async (req, res) => {
+  info('API: Health check requested');
+  
+  const healthInfo = {
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    version: process.env.npm_package_version || '1.0.0',
+    mode: process.env.EMBEDDED_MODE ? 'embedded' : 'standalone',
+    uptime: process.uptime(),
+    api: {
+      name: 'CNC G-code Sender API',
+      version: '1.0.0',
+      description: 'REST API for CNC machine control and G-code execution'
+    }
+  };
+  
+  res.json(healthInfo);
+});
+
+/**
+ * Get detailed help information (moved from getHealth)
+ */
+export const getHelp = asyncHandler(async (req, res) => {
   info('API: Getting help information');
   
   const helpInfo = {

@@ -59,15 +59,7 @@ const router = express.Router();
  *               timestamp: "2024-06-24T12:00:00.000Z"
  *               execution_time_ms: 1
  */
-router.get('/health', (req, res) => {
-  res.success({
-    service: 'CNC G-code Sender API',
-    version: '1.0.0',
-    status: 'healthy',
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString()
-  }, 'API is healthy');
-});
+// Health endpoint is now handled by the health feature routes
 
 /**
  * @swagger
