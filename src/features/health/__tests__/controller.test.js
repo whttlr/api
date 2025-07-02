@@ -70,7 +70,7 @@ jest.unstable_mockModule('@cnc/core/services/shared/InstanceManager', () => ({
 
 jest.unstable_mockModule('@cnc/core/services/logger', () => mockLogger);
 
-jest.unstable_mockModule('../../config/messages.js', () => ({
+jest.unstable_mockModule('../../../config/messages.js', () => ({
   getApiMessages: jest.fn(() => mockApiMessages)
 }));
 

@@ -1161,10 +1161,10 @@ This API provides programmatic access to all CLI functionality including:
     }
   },
   apis: [
-    'src/ui/api/routes/*.js',
-    'src/ui/api/features/*/routes.js',
-    'src/ui/api/features/*/controller.js',
-    'src/ui/api/docs/swagger.js'
+    'src/routes/*.js',
+    'src/features/*/routes.js',
+    'src/features/*/controller.js',
+    'src/docs/swagger.js'
   ]
 };
 

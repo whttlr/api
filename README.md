@@ -1,397 +1,375 @@
-# Advanced CNC Control System
+# CNC G-code Sender API
 
-A comprehensive Node.js-based CNC control system with enterprise-grade features including real-time monitoring, automatic recovery, state management, and advanced streaming capabilities. Built for professional CNC operations with GRBL-compatible controllers.
+A comprehensive REST API server for CNC machine control and G-code execution. Built for professional CNC operations with GRBL-compatible controllers, providing enterprise-grade features including real-time monitoring, automatic recovery, and advanced file processing.
 
 ## Features
 
-### 🚀 Core Features
-- **Real-time Connection Health Monitoring** - Automatic connection recovery with latency tracking
-- **Comprehensive State Management** - Complete machine state tracking with persistence
-- **Hardware-Software Synchronization** - Automatic state correction and validation
-- **Chunked File Streaming** - Memory-efficient processing of large G-code files
-- **Configuration Management** - Backup/restore with hardware synchronization
-- **Advanced Error Recovery** - Smart retry logic with exponential backoff
-- **Live Status Monitoring** - Real-time machine status and position tracking
+### 🚀 Core API Features
+- **RESTful API Interface** - Complete HTTP API for CNC machine control
+- **Real-time Connection Management** - Serial port connection handling with health monitoring
+- **G-code Execution** - Execute commands and files through HTTP endpoints
+- **File Management** - Upload, validate, and execute G-code files
+- **Machine Status Monitoring** - Real-time machine status and position tracking
+- **Preset Management** - Save and execute command presets
+- **Comprehensive Health Checks** - System diagnostics and health monitoring
 
 ### 🔧 Advanced Capabilities
-- **Pause/Resume Operations** - Interrupt and resume G-code execution
-- **Automatic Checkpointing** - Resume large files from interruption points
-- **Performance Metrics** - Comprehensive monitoring and analytics
+- **Multi-format Support** - JSON and form-data API endpoints
+- **File Upload/Download** - Direct file transfer through API
+- **Error Recovery** - Smart retry logic with detailed error responses
+- **Configuration Management** - Dynamic configuration through API
 - **Event-Driven Architecture** - Real-time updates and notifications
-- **Enterprise Integration** - RESTful API and configuration management
-- **Connection Sharing** - Multiple interfaces can share the same CNC connection
+- **CORS Support** - Cross-origin requests for web interface integration
 
 ## Quick Start
 
-### Basic CLI Usage
+### Start the API Server
 
-*   **Send a single G-code command:**
-    ```bash
-    node src/index.js "G0 X-5"
-    ```
-
-*   **Start in interactive mode:**
-    ```bash
-    node src/index.js --interactive
-    ```
-
-### Advanced System Usage
-
-*   **Start with advanced monitoring:**
-    ```bash
-    node src/index.js --monitoring --health-check
-    ```
-
-## Advanced Features Integration
-
-### Using the Complete CNC System
-
-```javascript
-import { AdvancedCNCSystem } from './examples/advanced-features-integration.js';
-
-// Initialize the complete system
-const cncSystem = new AdvancedCNCSystem(
-  serialInterface,    // Your serial connection
-  commandManager,     // Your command manager  
-  streamingManager    // Your streaming manager
-);
-
-// Start all advanced features
-await cncSystem.start();
-
-// Execute large files with monitoring
-await cncSystem.executeGcodeFile('large-project.gcode', {
-  resume: true,  // Resume from checkpoint if available
-  chunkSize: 1000,
-  enableMonitoring: true
-});
-
-// Get comprehensive system status
-const status = cncSystem.getSystemStatus();
-console.log('System Health:', status.overall.systemHealthy);
-console.log('Current Position:', status.state.position.work);
-console.log('Connection Latency:', status.health.latency);
-```
-
-### Individual Component Usage
-
-#### 1. Connection Health Monitoring
-```javascript
-import { ConnectionHealthMonitor } from './src/cnc/monitoring/ConnectionHealthMonitor.js';
-
-const healthMonitor = new ConnectionHealthMonitor(serialInterface, {
-  healthCheckInterval: 3000,
-  enableAutoRecovery: true,
-  enableLatencyTracking: true
-});
-
-healthMonitor.start();
-
-healthMonitor.on('healthDegraded', (event) => {
-  console.log('Connection issues detected:', event);
-});
-```
-
-#### 2. Machine State Management
-```javascript
-import { MachineStateManager } from './src/cnc/state/MachineStateManager.js';
-
-const stateManager = new MachineStateManager({
-  persistState: true,
-  autoSave: true,
-  trackHistory: true
-});
-
-// Track machine state changes
-stateManager.on('positionChanged', (event) => {
-  console.log('New position:', event.current.work);
-});
-```
-
-#### 3. Chunked File Streaming
-```javascript
-import { ChunkedFileStreamer } from './src/cnc/streaming/ChunkedFileStreamer.js';
-
-const streamer = new ChunkedFileStreamer(streamingManager, {
-  chunkSize: 1000,
-  enablePauseResume: true,
-  enableCheckpointing: true
-});
-
-// Stream large files efficiently
-await streamer.startChunkedStreaming('huge-file.gcode');
-
-// Monitor progress
-streamer.on('chunkCompleted', (event) => {
-  console.log(`Progress: ${Math.round(event.totalProgress * 100)}%`);
-});
-```
-
-### Command-Line Options
-
-*   `--port <path>`: Override the default serial port
-    ```bash
-    node src/index.js --port /dev/ttyUSB0 "G0 X-5"
-    ```
-
-*   `--file <path>`: Execute G-code file with advanced streaming
-    ```bash
-    node src/index.js --file large-project.gcode --chunked --monitoring
-    ```
-
-*   `--shared`: Use shared connection (allows multiple interfaces)
-    ```bash
-    node src/index.js --shared "G0 X10"
-    npm run interactive -- --shared --interactive
-    ```
-
-*   `--status`: Show current connection status
-    ```bash
-    node src/index.js --status
-    ```
-
-*   `--monitoring`: Enable real-time health monitoring
-    ```bash
-    node src/index.js --monitoring --interactive
-    ```
-
-*   `--backup`: Create configuration backup before operations
-    ```bash
-    node src/index.js --backup --file project.gcode
-    ```
-
-*   `--resume`: Resume from last checkpoint
-    ```bash
-    node src/index.js --file project.gcode --resume
-    ```
-
-*   `--diagnose`: Run comprehensive system diagnostics
-    ```bash
-    node src/index.js --diagnose --health-check
-    ```
-
-*   `--sync`: Force hardware-software state synchronization
-    ```bash
-    node src/index.js --sync --status
-    ```
-
-## Connection Sharing
-
-The CNC system supports **connection sharing** between multiple interfaces, allowing you to run the web API, CLI, and interactive mode simultaneously without port conflicts.
-
-### How It Works
-
-- **Single Shared Connection**: All interfaces use the same `GcodeSender` instance
-- **No Port Conflicts**: Multiple tools can access the CNC machine at the same time
-- **Opt-in Behavior**: Use the `--shared` flag to enable connection sharing
-- **Status Monitoring**: Check current connection status with `--status`
-
-### Usage Examples
-
-**1. Check Connection Status:**
 ```bash
-# See if anything is currently connected
-npm run interactive -- --status
-# Output: "No shared connection active" or connection details
-```
+# Install dependencies
+npm install
 
-**2. Start API and Use CLI Simultaneously:**
-```bash
-# Terminal 1: Start the API server
+# Start the API server
 npm start
-
-# Terminal 2: Use CLI with shared connection
-npm run interactive -- --shared "G28"  # Send homing command
-npm run interactive -- --shared --file project.gcode  # Execute file
-npm run interactive -- --shared --interactive  # Start interactive mode
 ```
 
-**3. Multiple CLI Sessions:**
+The API server will start on `http://localhost:3000` by default.
+
+### Basic API Usage
+
+**1. Check API Health:**
 ```bash
-# Terminal 1: Start CLI in shared interactive mode
-npm run interactive -- --shared --interactive
-
-# Terminal 2: Send commands using shared connection
-npm run interactive -- --shared "G0 X10"
-npm run interactive -- --shared --diagnose
+curl http://localhost:3000/api/v1/health
 ```
 
-**4. Mixed Interface Usage:**
+**2. List Available Serial Ports:**
 ```bash
-# Web API handles file execution
-curl -X POST http://localhost:3000/api/gcode/execute -d '{"file": "project.gcode"}'
-
-# CLI monitors status using shared connection
-npm run interactive -- --shared --status
-
-# Pretty CLI provides real-time view
-npm run ink -- --shared  # (if ink CLI supports shared mode)
+curl http://localhost:3000/api/v1/connection/ports
 ```
 
-### Backward Compatibility
-
-- **Default Behavior Unchanged**: Without `--shared`, CLI works exactly as before
-- **Automatic Cleanup**: Non-shared connections still disconnect after operations
-- **No Breaking Changes**: Existing scripts and workflows continue to work
-
-### Benefits
-
-- **Simultaneous Access**: Run web interface and CLI monitoring together
-- **Development Workflow**: Debug with CLI while using web interface
-- **Operational Flexibility**: Switch between interfaces without reconnecting
-- **Resource Efficiency**: Single connection reduces overhead and conflicts
-
-## Examples
-
-### Basic Operations
-1.  **Execute a large G-code file with monitoring:**
-    ```bash
-    node src/index.js --file large-project.gcode --monitoring --chunked
-    ```
-
-2.  **Resume interrupted operation:**
-    ```bash
-    node src/index.js --file large-project.gcode --resume --monitoring
-    ```
-
-3.  **Run with health monitoring and auto-backup:**
-    ```bash
-    node src/index.js --interactive --monitoring --backup --health-check
-    ```
-
-4.  **Use shared connection with API:**
-    ```bash
-    # Start API server first
-    npm start
-    
-    # Then use CLI with shared connection
-    npm run interactive -- --shared --interactive
-    ```
-
-5.  **Monitor connection status:**
-    ```bash
-    npm run interactive -- --status
-    ```
-
-### Advanced Usage
-6.  **Execute with custom chunk size and checkpointing:**
-    ```bash
-    node src/index.js --file huge-file.gcode --chunked --chunk-size 500 --checkpoint-interval 2500
-    ```
-
-7.  **System maintenance and diagnostics:**
-    ```bash
-    node src/index.js --diagnose --sync --health-check --backup
-    ```
-
-8.  **Emergency recovery mode:**
-    ```bash
-    node src/index.js --recovery --sync --diagnose
-    ```
-
-9.  **Multi-interface workflow with shared connection:**
-    ```bash
-    # Terminal 1: Start API for web interface
-    npm start
-    
-    # Terminal 2: Monitor with CLI
-    npm run interactive -- --shared --diagnose
-    
-    # Terminal 3: Execute file via shared connection
-    npm run interactive -- --shared --file project.gcode
-    ```
-
-## System Architecture
-
-### Core Components
-
-```
-src/
-├── cnc/                           # CNC-specific modules
-│   ├── monitoring/                # Connection health monitoring
-│   │   └── ConnectionHealthMonitor.js
-│   ├── state/                     # Machine state management
-│   │   ├── MachineStateManager.js
-│   │   └── StateSynchronizer.js
-│   ├── streaming/                 # Large file streaming
-│   │   └── ChunkedFileStreamer.js
-│   ├── config/                    # Configuration management
-│   │   └── ConfigurationManager.js
-│   ├── commands/                  # G-code command execution
-│   └── alarms/                    # Alarm and error recovery
-├── lib/                          # Reusable services
-│   ├── shared/                   # Shared instance management
-│   │   └── InstanceManager.js    # Connection sharing logic
-│   ├── logger/                   # Centralized logging
-│   ├── status/                   # Status parsing
-│   └── helpers/                  # GRBL protocol helpers
-└── examples/                     # Integration examples
-    ├── advanced-features-integration.js
-    └── README.md
+**3. Connect to CNC Machine:**
+```bash
+curl -X POST http://localhost:3000/api/v1/connection/connect \
+  -H "Content-Type: application/json" \
+  -d '{"port": "/dev/ttyUSB0"}'
 ```
 
-### Event-Driven Architecture
+**4. Get Machine Status:**
+```bash
+curl http://localhost:3000/api/v1/machine/status
+```
 
-The system uses EventEmitter for real-time communication:
+**5. Execute G-code Command:**
+```bash
+curl -X POST http://localhost:3000/api/v1/gcode/execute \
+  -H "Content-Type: application/json" \
+  -d '{"command": "G0 X10 Y10"}'
+```
 
-```javascript
-// Health monitoring events
-healthMonitor.on('healthDegraded', handleConnectionIssues);
-healthMonitor.on('healthRestored', resumeOperations);
+## API Documentation
 
-// State management events  
-stateManager.on('positionChanged', updateDisplay);
-stateManager.on('statusChanged', logStatusChange);
+### Base URL
+```
+http://localhost:3000/api/v1
+```
 
-// Streaming events
-chunkedStreamer.on('chunkCompleted', updateProgress);
-chunkedStreamer.on('streamingCompleted', handleCompletion);
+### Connection Management
 
-// Configuration events
-configManager.on('backupCreated', logBackup);
-configManager.on('configurationUpdated', syncToHardware);
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/connection/ports` | GET | List available serial ports |
+| `/connection/status` | GET | Get current connection status |
+| `/connection/connect` | POST | Connect to a serial port |
+| `/connection/disconnect` | POST | Disconnect from current port |
+| `/connection/reset` | POST | Reset connection state |
+
+### Machine Control
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/machine/status` | GET | Get machine status and position |
+| `/machine/unlock` | POST | Send unlock command ($X) |
+| `/machine/home` | POST | Send homing command ($H) |
+| `/machine/reset` | POST | Send soft reset |
+| `/machine/emergency-stop` | POST | Send emergency stop (M112) |
+
+### G-code Execution
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/gcode/execute` | POST | Execute single G-code command |
+| `/gcode/file` | POST | Execute G-code file |
+| `/gcode/validate` | POST | Validate G-code without execution |
+
+### File Management
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/files` | GET | List uploaded files |
+| `/files/upload` | POST | Upload G-code file |
+| `/files/{filename}` | GET | Download file |
+| `/files/{filename}/validate` | POST | Validate specific file |
+| `/files/{filename}/execute` | POST | Execute specific file |
+
+### Presets
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/presets` | GET | List available presets |
+| `/presets/{name}/execute` | POST | Execute preset by name |
+| `/presets/{name}/validate` | POST | Validate preset |
+
+### Health & Diagnostics
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | API health check |
+| `/health/detailed` | GET | Comprehensive system health |
+| `/` | GET | API information and available endpoints |
+
+## Example API Workflows
+
+### Complete CNC Operation
+
+```bash
+# 1. Check system health
+curl http://localhost:3000/api/v1/health
+
+# 2. List and connect to port
+curl http://localhost:3000/api/v1/connection/ports
+curl -X POST http://localhost:3000/api/v1/connection/connect \
+  -H "Content-Type: application/json" \
+  -d '{"port": "/dev/ttyUSB0"}'
+
+# 3. Home the machine
+curl -X POST http://localhost:3000/api/v1/machine/home
+
+# 4. Check machine status
+curl http://localhost:3000/api/v1/machine/status
+
+# 5. Execute G-code commands
+curl -X POST http://localhost:3000/api/v1/gcode/execute \
+  -H "Content-Type: application/json" \
+  -d '{"command": "G0 X0 Y0 Z0"}'
+
+# 6. Upload and execute file
+curl -X POST http://localhost:3000/api/v1/files/upload \
+  -F "file=@project.gcode"
+
+curl -X POST http://localhost:3000/api/v1/files/project.gcode/execute
+```
+
+### File Upload and Execution
+
+```bash
+# Upload G-code file
+curl -X POST http://localhost:3000/api/v1/files/upload \
+  -F "file=@my-project.gcode" \
+  -F "description=CNC Project File"
+
+# Validate the uploaded file
+curl -X POST http://localhost:3000/api/v1/files/my-project.gcode/validate
+
+# Execute the file
+curl -X POST http://localhost:3000/api/v1/files/my-project.gcode/execute
+```
+
+### Error Handling Example
+
+```bash
+# API returns structured error responses
+curl -X POST http://localhost:3000/api/v1/gcode/execute \
+  -H "Content-Type: application/json" \
+  -d '{"command": "INVALID_GCODE"}'
+
+# Response:
+# {
+#   "success": false,
+#   "error": {
+#     "code": "INVALID_GCODE",
+#     "message": "Invalid G-code format",
+#     "details": "Command 'INVALID_GCODE' is not recognized"
+#   },
+#   "timestamp": "2024-01-15T10:30:00.000Z"
+# }
 ```
 
 ## Configuration
 
-### Machine Configuration
+### Environment Variables
+
+```bash
+# Server configuration
+PORT=3000
+HOST=0.0.0.0
+NODE_ENV=production
+
+# CNC configuration
+DEFAULT_PORT=/dev/ttyUSB0
+BAUD_RATE=115200
+```
+
+### Configuration File
+
+Edit `config.json` to customize machine settings:
+
 ```json
 {
-  "machine": {
-    "name": "CNC Router",
-    "type": "grbl",
-    "limits": {
-      "x": { "min": -400, "max": 400 },
-      "y": { "min": -300, "max": 300 },
-      "z": { "min": -100, "max": 100 }
-    }
-  },
-  "connection": {
-    "port": "/dev/ttyUSB0",
+  "defaultPort": "/dev/ttyUSB0",
+  "serialPort": {
     "baudRate": 115200,
-    "healthCheck": true,
-    "autoRecovery": true
+    "timeout": 5000
   },
-  "streaming": {
-    "chunkSize": 1000,
-    "enableCheckpointing": true,
-    "maxMemoryUsage": "100MB"
+  "machineLimits": {
+    "x": {"min": -100, "max": 100},
+    "y": {"min": -100, "max": 100},
+    "z": {"min": -50, "max": 50}
+  },
+  "grbl": {
+    "statusCommand": "?",
+    "homeCommand": "$H",
+    "unlockCommand": "$X"
   }
 }
 ```
 
-### Health Monitoring Configuration
-```json
-{
-  "healthMonitor": {
-    "healthCheckInterval": 5000,
-    "pingTimeout": 2000,
-    "maxConsecutiveFailures": 3,
-    "enableAutoRecovery": true,
-    "latencyWarningThreshold": 1000,
-    "latencyCriticalThreshold": 3000
-  }
-}
+## Development
+
+### Available Scripts
+
+```bash
+# Start the API server
+npm start
+
+# Start in development mode with auto-reload
+npm run dev
+
+# Run tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Generate API documentation
+npm run docs:mcp-generate
+```
+
+### API Development
+
+The API server is built using:
+- **Express.js** - Web framework
+- **CORS** - Cross-origin resource sharing
+- **Multer** - File upload handling
+- **Helmet** - Security headers
+- **Swagger** - API documentation
+
+### Project Structure
+
+```
+src/
+├── ui/api/                    # API server code
+│   ├── features/              # Feature-based API modules
+│   │   ├── connection/        # Connection management
+│   │   ├── machine/           # Machine control
+│   │   ├── gcode/             # G-code execution
+│   │   ├── files/             # File management
+│   │   ├── presets/           # Preset management
+│   │   └── health/            # Health checks
+│   ├── middleware/            # Express middleware
+│   ├── shared/                # Shared utilities
+│   └── server.js              # Main server file
+├── locales/                   # Internationalization
+└── config.json               # Configuration file
+```
+
+### Testing
+
+The project follows Test-Driven Development (TDD):
+
+```bash
+# Run all tests
+npm test
+
+# Run specific test suites
+npm test -- --testPathPatterns="connection"
+
+# Generate coverage report
+npm run test:coverage
+```
+
+Tests are co-located with source code in `__tests__/` folders following the feature-based architecture.
+
+## API Integration
+
+### Web Interface Integration
+
+The API is designed to work with web frontends:
+
+```javascript
+// Example frontend integration
+const api = 'http://localhost:3000/api/v1';
+
+// Connect to machine
+const response = await fetch(`${api}/connection/connect`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ port: '/dev/ttyUSB0' })
+});
+
+// Execute G-code
+const executeResponse = await fetch(`${api}/gcode/execute`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ command: 'G0 X10 Y10' })
+});
+```
+
+### CORS Configuration
+
+The API supports cross-origin requests from:
+- `localhost:3000`, `localhost:3001`, `localhost:8080` (development)
+- Configurable origins for production environments
+
+## Troubleshooting
+
+### Common Issues
+
+**API Server Won't Start:**
+```bash
+# Check if port is in use
+netstat -an | grep 3000
+
+# Start on different port
+PORT=3001 npm start
+```
+
+**Connection Issues:**
+```bash
+# List available ports
+curl http://localhost:3000/api/v1/connection/ports
+
+# Check connection status
+curl http://localhost:3000/api/v1/connection/status
+
+# Test basic connectivity
+curl -X POST http://localhost:3000/api/v1/connection/connect \
+  -H "Content-Type: application/json" \
+  -d '{"port": "/dev/ttyUSB0"}'
+```
+
+**File Upload Problems:**
+```bash
+# Check file size limits (default 10MB)
+# Ensure proper Content-Type for file uploads
+curl -X POST http://localhost:3000/api/v1/files/upload \
+  -F "file=@project.gcode"
+```
+
+### Debug Mode
+
+Enable detailed logging:
+```bash
+DEBUG=cnc:* npm start
 ```
 
 ## Installation
@@ -402,166 +380,55 @@ configManager.on('configurationUpdated', syncToHardware);
 - GRBL-compatible CNC controller
 
 ### Setup
-1. **Clone the repository:**
+
+1. **Clone and install:**
    ```bash
    git clone <repository-url>
-   cd cnc
-   ```
-
-2. **Install dependencies:**
-   ```bash
+   cd cnc-api
    npm install
    ```
 
-3. **Configure your machine:**
+2. **Configure machine settings:**
    ```bash
    cp config.example.json config.json
    # Edit config.json with your machine settings
    ```
 
-4. **Test connection:**
+3. **Start the API server:**
    ```bash
-   npm run list-ports
-   node src/index.js --port /dev/ttyUSB0 "?"
+   npm start
+   ```
+
+4. **Test the connection:**
+   ```bash
+   curl http://localhost:3000/api/v1/health
    ```
 
 ### Dependencies
+- **express**: Web framework for API server
+- **cors**: Cross-origin resource sharing
+- **multer**: File upload handling
+- **helmet**: Security middleware
 - **serialport**: Serial communication with CNC controllers
-- **jest**: Testing framework for development
-- **i18next**: Internationalization framework
-- **i18next-fs-backend**: File system backend for translations
+- **swagger-jsdoc**: API documentation generation
 
-## Key Features Explained
+## Advanced Features
 
-### 🔄 Connection Health Monitoring
-- **Real-time Ping Tests**: Continuously monitors connection responsiveness
-- **Latency Tracking**: Measures and tracks connection performance over time
-- **Automatic Recovery**: Detects connection issues and attempts automatic reconnection
-- **Circuit Breaker Pattern**: Prevents cascading failures during connection problems
-- **Performance Metrics**: Comprehensive connection statistics and health scoring
+### File Processing
+- **Multi-format Upload**: Support for .gcode, .nc, .txt files
+- **File Validation**: Pre-execution G-code validation
+- **Direct Execution**: Execute files without local storage
 
-### 📊 Machine State Management  
-- **Complete State Tracking**: Position, modal groups, tool state, work coordinates
-- **Persistent Storage**: Automatic state saving with configurable intervals
-- **Change History**: Complete audit trail of all state changes with timestamps
-- **State Validation**: Ensures state consistency and validates changes
-- **GRBL Integration**: Native parsing and handling of GRBL status responses
+### Security
+- **CORS Protection**: Configurable cross-origin policies
+- **Input Validation**: Request parameter validation
+- **Error Handling**: Structured error responses
+- **Rate Limiting**: Configurable request rate limits
 
-### 🔄 Hardware-Software Synchronization
-- **Continuous Monitoring**: Regular queries to ensure software matches hardware state
-- **Automatic Correction**: Detects and corrects state discrepancies automatically
-- **Configurable Tolerance**: Adjustable thresholds for position and timing accuracy
-- **Conflict Resolution**: Intelligent handling of state conflicts with user preferences
-- **Deep Sync**: Comprehensive state validation including work coordinates and modal groups
-
-### 📁 Chunked File Streaming
-- **Memory Efficient**: Processes large files without loading entire contents into memory
-- **Pause/Resume**: Interrupt and resume operations at any point
-- **Automatic Checkpointing**: Creates recovery points during long operations
-- **Progress Tracking**: Real-time progress reporting with time estimates
-- **Error Recovery**: Automatic retry of failed chunks with exponential backoff
-
-### 💾 Configuration Management
-- **Automatic Backups**: Scheduled and event-triggered configuration backups
-- **Hardware Sync**: Bidirectional synchronization between software and machine settings
-- **Version Control**: Configuration versioning with change tracking
-- **Import/Export**: Share configurations between machines and installations
-- **Validation**: Comprehensive validation before applying configuration changes
-
-## Performance & Monitoring
-
-### Real-time Metrics
-- Connection latency and stability
-- Machine position and status
-- Streaming progress and performance
-- System resource usage
-- Error rates and recovery statistics
-
-### Alerting System
-- Connection health degradation
-- State synchronization issues
-- Streaming errors and failures
-- Configuration change notifications
-- System maintenance reminders
-
-## Troubleshooting
-
-### Common Issues
-
-**Connection Problems:**
-```bash
-# Check available ports
-npm run list-ports
-
-# Test basic connectivity
-node src/index.js --port /dev/ttyUSB0 "?"
-
-# Run connection diagnostics
-node src/index.js --diagnose --health-check
-```
-
-**State Synchronization Issues:**
-```bash
-# Force state synchronization
-node src/index.js --sync --status
-
-# Reset machine state
-node src/index.js --reset-state --backup
-```
-
-**Large File Problems:**
-```bash
-# Use chunked streaming with smaller chunks
-node src/index.js --file large.gcode --chunked --chunk-size 500
-
-# Resume from checkpoint
-node src/index.js --file large.gcode --resume
-```
-
-### Debug Logging
-Enable detailed logging for troubleshooting:
-```javascript
-import { LoggerService } from './src/lib/logger/LoggerService.js';
-LoggerService.setLevel('debug');
-```
-
-### Emergency Recovery
-```bash
-# Emergency stop and state preservation
-node src/index.js --emergency-stop
-
-# Recovery mode with diagnostics
-node src/index.js --recovery --diagnose --sync
-```
-
-## Development
-
-### Running Tests
-```bash
-# Run all tests
-npm test
-
-# Run tests with coverage
-npm run test:coverage
-
-# Run specific test suites
-npm run test:unit
-npm run test:integration
-```
-
-### Project Structure
-- **TDD Approach**: All new features require tests first
-- **Self-contained Modules**: Each feature is organized in dedicated folders
-- **Event-driven Architecture**: Components communicate via EventEmitter
-- **Configuration Management**: No hardcoded values, everything configurable
-- **Comprehensive Logging**: Centralized logging with multiple output formats
-
-### Contributing
-1. Follow TDD principles - write tests first
-2. Maintain self-contained module structure
-3. Use centralized logging (no console.log)
-4. Update documentation for new features
-5. Ensure all tests pass before submitting
+### Monitoring
+- **Health Endpoints**: System and connection health monitoring
+- **Status Tracking**: Real-time machine status via API
+- **Error Reporting**: Comprehensive error logging and reporting
 
 ## License
 

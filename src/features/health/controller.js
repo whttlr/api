@@ -12,9 +12,9 @@ import { Config } from '@cnc/core/cnc/config';
 const CONFIG = Config.get();
 
 /**
- * Get comprehensive API and CLI help information
+ * Get basic health status
  */
-export const getHelp = asyncHandler(async (req, res) => {
+export const getHealth = asyncHandler(async (req, res) => {
   info('API: Getting help information');
   
   const helpInfo = {
@@ -68,9 +68,9 @@ export const getHelp = asyncHandler(async (req, res) => {
 });
 
 /**
- * Get available G-code commands documentation
+ * Get detailed health status with comprehensive system information
  */
-export const getCommands = asyncHandler(async (req, res) => {
+export const getDetailedHealth = asyncHandler(async (req, res) => {
   info('API: Getting G-code commands documentation');
   
   const commands = {

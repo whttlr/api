@@ -1,11 +1,15 @@
 /**
- * CNC API Application Public API
+ * API Module Public API
  * 
- * Re-exports core functionality from cnc-core and API-specific modules.
+ * Exports API-specific functionality and configurations.
  */
 
-// Core CNC functionality from cnc-core
-export * from '@cnc/core';
+// Configuration
+export * from './config/messages.js';
 
-// API-specific exports
-export * from './ui/api/index.js';
+// Shared middleware and utilities
+export * from './shared/responseFormatter.js';
+export * from './shared/middleware/errorHandler.js';
+
+// Route definitions
+export { default as apiRoutes } from './routes/index.js';

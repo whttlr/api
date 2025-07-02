@@ -2,18 +2,18 @@
   "name": "@cnc/api",
   "version": "1.0.0",
   "description": "REST API server for CNC G-code sender",
-  "main": "src/ui/api/server.js",
+  "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "start": "node src/ui/api/server.js",
-    "dev": "npm run docs:mcp-generate && nodemon src/ui/api/server.js",
+    "start": "node src/server.js",
+    "dev": "npm run docs:mcp-generate && nodemon src/server.js",
     "test": "node --experimental-vm-modules node_modules/.bin/jest",
     "test:watch": "node --experimental-vm-modules node_modules/.bin/jest --watch",
     "test:coverage": "node --experimental-vm-modules node_modules/.bin/jest --coverage",
     "test:unit": "node --experimental-vm-modules node_modules/.bin/jest --testPathPattern='src.*__tests__'",
     "test:integration": "node --experimental-vm-modules node_modules/.bin/jest --testPathPattern='integration'",
     "docs:mcp-generate": "node scripts/mcp/generate-docs.js",
-    "docs:mcp-watch": "nodemon --watch src/ui/api --exec 'npm run docs:mcp-generate'",
+    "docs:mcp-watch": "nodemon --watch src --exec 'npm run docs:mcp-generate'",
     "lint": "eslint src/",
     "build": "echo 'No build step required for ES modules'"
   },
@@ -45,6 +45,7 @@
     "@babel/register": "^7.27.1",
     "esbuild": "^0.25.5",
     "esbuild-node-loader": "^0.8.0",
-    "jest": "^30.0.2"
+    "jest": "^30.0.2",
+    "supertest": "^7.1.1"
   }
 }

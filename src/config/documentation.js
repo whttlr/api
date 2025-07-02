@@ -85,8 +85,8 @@ export const documentationConfig = {
       }
     },
     apis: [
-      './src/ui/api/features/*/routes.js',
-      './src/ui/api/features/*/schemas.js'
+      './src/features/*/routes.js',
+      './src/features/*/schemas.js'
     ]
   },
   

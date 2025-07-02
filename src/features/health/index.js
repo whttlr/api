@@ -5,4 +5,4 @@
  */
 
 export { default as healthRoutes } from './routes.js';
-export { getHelp, getCommands } from './controller.js';
+export { getHealth, getDetailedHealth } from './controller.js';

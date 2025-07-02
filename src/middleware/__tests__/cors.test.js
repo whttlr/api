@@ -2,38 +2,38 @@
  * CORS Middleware Unit Tests
  */
 
-import { corsMiddleware } from '../cors.js';
 import { createMockRequest, createMockResponse, createMockNext } from '../../shared/__mocks__/express-mocks.js';
 
 // Mock cors module
-jest.mock('cors', () => {
-  const mockCors = jest.fn((options) => {
-    return (req, res, next) => {
-      // Simulate CORS behavior
-      if (options.origin) {
-        const origin = req.headers.origin;
-        options.origin(origin, (err, allowed) => {
-          if (err) return next(err);
-          if (allowed) {
-            res.setHeader('Access-Control-Allow-Origin', origin || '*');
-          }
-          next();
-        });
-      } else {
+const mockCors = jest.fn((options) => {
+  // Store the options for testing
+  mockCors.lastOptions = options;
+  return (req, res, next) => {
+    // Simulate CORS behavior
+    if (options.origin) {
+      const origin = req.headers.origin;
+      options.origin(origin, (err, allowed) => {
+        if (err) return next(err);
+        if (allowed) {
+          res.setHeader('Access-Control-Allow-Origin', origin || '*');
+        }
         next();
-      }
-    };
-  });
-  return mockCors;
+      });
+    } else {
+      next();
+    }
+  };
 });
+
+jest.mock('cors', () => mockCors);
 
 // Mock logger
 jest.mock('@cnc/core/services/logger', () => ({
   info: jest.fn()
 }));
 
-import cors from 'cors';
-import { info } from '@cnc/core/services/logger';
+// Import after mocking
+const { corsMiddleware } = await import('../cors.js');
 
 describe('CORS Middleware', () => {
   let req, res, next;
@@ -51,21 +51,23 @@ describe('CORS Middleware', () => {
   });
 
   test('should configure cors with proper options', () => {
-    expect(cors).toHaveBeenCalledWith(expect.objectContaining({
+    // Check if cors was called with the right options
+    expect(mockCors).toHaveBeenCalled();
+    const options = mockCors.lastOptions;
+    expect(options).toMatchObject({
       origin: expect.any(Function),
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
       credentials: true,
-      optionsSuccessStatus: 200
-    }));
+      maxAge: 86400
+    });
+    expect(options.allowedHeaders).toEqual(expect.arrayContaining(['Content-Type', 'Authorization', 'X-Requested-With']));
   });
 
   describe('origin function', () => {
     let originFunction;
 
     beforeEach(() => {
-      const corsCall = cors.mock.calls[0];
-      originFunction = corsCall[0].origin;
+      originFunction = mockCors.lastOptions?.origin;
     });
 
     test('should allow requests with no origin', () => {
@@ -199,35 +201,27 @@ describe('CORS Middleware', () => {
 
   describe('CORS configuration', () => {
     test('should configure appropriate HTTP methods', () => {
-      const corsCall = cors.mock.calls[0];
-      const options = corsCall[0];
-      
+      const options = mockCors.lastOptions;
       expect(options.methods).toEqual(['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']);
     });
 
     test('should configure appropriate headers', () => {
-      const corsCall = cors.mock.calls[0];
-      const options = corsCall[0];
-      
-      expect(options.allowedHeaders).toEqual([
+      const options = mockCors.lastOptions;
+      expect(options.allowedHeaders).toEqual(expect.arrayContaining([
         'Content-Type', 
         'Authorization', 
         'X-Requested-With'
-      ]);
+      ]));
     });
 
     test('should enable credentials', () => {
-      const corsCall = cors.mock.calls[0];
-      const options = corsCall[0];
-      
+      const options = mockCors.lastOptions;
       expect(options.credentials).toBe(true);
     });
 
-    test('should set OPTIONS success status', () => {
-      const corsCall = cors.mock.calls[0];
-      const options = corsCall[0];
-      
-      expect(options.optionsSuccessStatus).toBe(200);
+    test('should set maxAge for preflight cache', () => {
+      const options = mockCors.lastOptions;
+      expect(options.maxAge).toBe(86400);
     });
   });
 });

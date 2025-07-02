@@ -12,7 +12,7 @@ jest.mock('@cnc/core/services/logger', () => ({
 }));
 
 // Mock the config messages
-jest.mock('../../../config/messages.js', () => ({
+jest.mock('../../config/messages.js', () => ({
   getApiMessages: jest.fn(() => ({
     errors: {
       internal_error: 'An internal error occurred',
@@ -22,7 +22,7 @@ jest.mock('../../../config/messages.js', () => ({
 }));
 
 import { error as logError } from '@cnc/core/services/logger';
-import { getApiMessages } from '../../../config/messages.js';
+import { getApiMessages } from '../../config/messages.js';
 
 describe('Shared Error Handler Middleware', () => {
   beforeEach(() => {
